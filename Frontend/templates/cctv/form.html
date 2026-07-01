@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#001e60">
+  <title>Nueva Investigación CCTV - Asset Protection</title>
+  <link rel="manifest" href="/static/manifest.json?v=5">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <script>
+    // Limpieza forzada de Service Workers agresivos para evitar cache de datos de AP
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let r of registrations) {
+          r.unregister().then(() => console.log('SW Desinstalado'));
+        }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(keys) {
+        for (let k of keys) {
+          caches.delete(k);
+        }
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="/static/walmart-font.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --blue:   #001e60;
+      --spark:  #ffc220;
+      --green:  #2a8703;
+      --red:    #ea1100;
+      --bg:     #f0f4fb;
+      --card:   #ffffff;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --radius: 1rem;
+      --gray-light: #f1f5f9;
+      --border: #e2e8f0;
+    }
+
+    body {
+      font-family: "Bogle", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--blue);
+      color: #fff;
+      padding: 0 1.25rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.3);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: #fff; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; }
+    .brand-sub { font-size: .7rem; opacity: .75; }
+
+    .header-right { display: flex; align-items: center; gap: .75rem; }
+    .nav-btn {
+      background: rgba(255,255,255,.18);
+      border: none; color: #fff; border-radius: .5rem;
+      padding: .4rem .8rem; cursor: pointer; font-size: .8rem; font-weight: 700;
+      text-decoration: none; transition: background .15s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,.3); }
+
+    main {
+      flex: 1;
+      padding: 1rem .75rem 2rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .form-header {
+      margin-bottom: 1.5rem;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .page-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .type-badge {
+      font-size: .75rem;
+      font-weight: 800;
+      padding: .25rem .75rem;
+      border-radius: 999px;
+    }
+    .type-badge.photo-badge { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .type-badge.no-photo-badge { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+    /* ===== METADATA CARD ===== */
+    .meta-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .meta-card {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+    }
+    .form-label {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .form-control {
+      padding: .75rem .9rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      border-radius: .5rem;
+      outline: none;
+      transition: border-color .15s;
+      color: var(--text);
+    }
+    .form-control:focus {
+      border-color: var(--blue);
+    }
+
+    /* ===== TIMELINE SECTION ===== */
+    .timeline-section {
+      margin-bottom: 1.5rem;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: .5rem;
+    }
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--blue);
+    }
+    
+    .btn-add-event {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: .5rem;
+      padding: .45rem .9rem;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-add-event:hover { background: #0041b8; }
+
+    /* ===== EVENT CARD ===== */
+    .event-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 1rem;
+      border-left: 5px solid var(--blue);
+      position: relative;
+      animation: slideDown .2s ease;
+    }
+    .event-card.with-photos {
+      border-left-color: var(--spark);
+    }
+    .event-number {
+      font-size: .8rem;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: .75rem;
+    }
+    .btn-remove-event {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: var(--red);
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-remove-event:hover {
+      text-decoration: underline;
+    }
+
+    .event-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    @media (min-width: 640px) {
+      .event-grid {
+        grid-template-columns: 2fr 1fr;
+      }
+    }
+
+    /* ===== NARRATIVE CARD ===== */
+    .notes-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 2rem;
+    }
+    .notes-textarea {
+      width: 100%;
+      height: 120px;
+      padding: .75rem;
+      border: 2px solid var(--border);
+      border-radius: .5rem;
+      outline: none;
+      resize: vertical;
+      font-size: .95rem;
+      margin-top: .5rem;
+    }
+    .notes-textarea:focus {
+      border-color: var(--blue);
+    }
+
+    /* ===== SUBMIT ROW ===== */
+    .submit-row {
+      display: flex;
+      gap: .75rem;
+    }
+    .btn-cancel {
+      flex: 1;
+      padding: .9rem;
+      background: #cbd5e1;
+      color: #334155;
+      text-align: center;
+      text-decoration: none;
+      border-radius: .75rem;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: #94a3b8; }
+    
+    .btn-submit {
+      flex: 2;
+      padding: .9rem;
+      background: var(--blue);
+      color: #fff;
+      border-radius: .75rem;
+      font-weight: 800;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 83, 226, 0.3);
+    }
+    .btn-submit:hover { background: #0041b8; }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="/cctv" class="brand">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <img src="/static/wm_logo.png" alt="Walmart" style="height: 2.25rem; object-fit: contain;">
+        <div style="width: 1px; height: 1.5rem; background: rgba(255,255,255,0.3);"></div>
+        <img src="/static/ap_logo.png" alt="Asset Protection" style="height: 2.25rem; object-fit: contain;">
+      </div>
+      <div>
+        <p class="brand-sub">Walmart / AP Investigations</p>
+        <h1 class="brand-title">Portal de CCTV</h1>
+      </div>
+    </a>
+    <div class="header-right">
+      <a href="/cctv" class="nav-btn">Ver Historial</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      
+      <form action="/cctv/new" method="POST" enctype="multipart/form-data" id="cctvForm">
+        <input type="hidden" name="with_photos" value="{{ 'true' if with_photos else 'false' }}">
+
+        <div class="form-header">
+          <div>
+            <h2 class="page-title">Nueva Investigación CCTV</h2>
+            <p class="page-subtitle">Registra la cronología de eventos observados en cámara de seguridad.</p>
+          </div>
+          <div>
+            {% if with_photos %}
+              <span class="type-badge photo-badge">CON FOTO</span>
+            {% else %}
+              <span class="type-badge no-photo-badge">SIN FOTO</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- METADATA CARD -->
+        <div class="meta-card">
+          <div class="form-group">
+            <label class="form-label">Número de Tienda</label>
+            <input type="text" name="store_id" id="store_id" class="form-control" placeholder="Ej. 3716" required maxlength="4">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Sujeto / Asociado bajo Investigación</label>
+            <input type="text" name="subject_name" class="form-control" placeholder="Ej. John Doe" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fecha del Video (Footage Date)</label>
+            <input type="date" name="video_date" class="form-control" required id="video_date">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fecha de la Investigación</label>
+            <input type="date" name="investigation_date" class="form-control" required id="investigation_date">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">API (Investigador AP)</label>
+            <input type="text" name="api" class="form-control" placeholder="Tu nombre" value="Héctor Soto" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">APASM (Supervisor AP)</label>
+            <input type="text" name="apasm" class="form-control" placeholder="Nombre de supervisor/a" value="María Calderón" required>
+          </div>
+        </div>
+
+        <!-- TIMELINE SECTION -->
+        <div class="timeline-section">
+          <div class="section-header">
+            <h3 class="section-title">Cronología de Eventos</h3>
+            <button type="button" class="btn-add-event" id="btnAddEvent">+ Añadir Evento</button>
+          </div>
+
+          <div id="eventsContainer">
+            <!-- Events are dynamically added here by JS -->
+          </div>
+        </div>
+
+        <!-- NARRATIVE CARD -->
+        <div class="notes-card">
+          <label class="form-label" style="font-size: .85rem; color: var(--blue);">Narrativa de la Investigación / Conclusiones</label>
+          <p style="font-size: .8rem; color: var(--muted); margin-top: .15rem;">Resume el incidente, las acciones tomadas o las observaciones globales de la investigación de seguridad.</p>
+          <textarea name="notes" class="notes-textarea" placeholder="Escribe aquí los comentarios finales, conclusiones o el resumen del caso..."></textarea>
+        </div>
+
+        <!-- SUBMIT ROW -->
+        <div class="submit-row">
+          <a href="/cctv" class="btn-cancel">Cancelar</a>
+          <button type="submit" class="btn-submit">Guardar y Generar Registro</button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>Desarrollado con por Hector & Toby</p>
+  </footer>
+
+  <script>
+    // Set default dates safely in local time to avoid UTC timezone shift or empty errors
+    const today = new Date();
+    const pad = (num) => String(num).padStart(2, '0');
+    
+    const yyyy = today.getFullYear();
+    const mm = pad(today.getMonth() + 1);
+    const dd = pad(today.getDate());
+    document.getElementById('investigation_date').value = `${yyyy}-${mm}-${dd}`;
+    
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const y_yyyy = yesterday.getFullYear();
+    const y_mm = pad(yesterday.getMonth() + 1);
+    const y_dd = pad(yesterday.getDate());
+    document.getElementById('video_date').value = `${y_yyyy}-${y_mm}-${y_dd}`;
+
+    const eventsContainer = document.getElementById('eventsContainer');
+    const btnAddEvent = document.getElementById('btnAddEvent');
+    let eventCount = 0;
+
+    const withPhotos = {{ 'true' if with_photos else 'false' }};
+
+    function createEventCard(index) {
+      const card = document.createElement('div');
+      card.className = `event-card ${withPhotos ? 'with-photos' : ''}`;
+      card.id = `event_card_${index}`;
+      
+      let photoInputHtml = '';
+      if (withPhotos) {
+        photoInputHtml = `
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label" style="color: #b45309;">Cargar Foto del Evento</label>
+            <input type="file" name="photo_${index}" class="form-control" accept="image/*" style="border-style: dashed; border-color: var(--spark);" required>
+          </div>
+        `;
+      }
+
+      card.innerHTML = `
+        <div class="event-number">EVENTO #${index + 1}</div>
+        <button type="button" class="btn-remove-event" onclick="removeEventCard(${index})">Eliminar</button>
+        
+        <div class="event-grid">
+          <div class="form-group">
+            <label class="form-label">Cámara / Ubicación</label>
+            <input type="text" name="camera_${index}" class="form-control" placeholder="Ej. STK_AISLE_PONCHADOR Y LOCKERS" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora (Timestamp)</label>
+            <input type="text" name="time_stamp_${index}" class="form-control" placeholder="Ej. 18:13:04" required>
+          </div>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <label class="form-label">Descripción de lo observado</label>
+          <textarea name="description_${index}" class="form-control" style="height: 80px; resize: vertical;" placeholder="Se observa a la asociada..." required></textarea>
+        </div>
+
+        ${photoInputHtml}
+        
+        <input type="hidden" name="event_indices" value="${index}">
+      `;
+      
+      return card;
+    }
+
+    function removeEventCard(index) {
+      const card = document.getElementById(`event_card_${index}`);
+      if (card) {
+        card.remove();
+        recalculateNumbers();
+      }
+    }
+
+    function recalculateNumbers() {
+      const cards = eventsContainer.querySelectorAll('.event-card');
+      cards.forEach((card, idx) => {
+        const numberLabel = card.querySelector('.event-number');
+        if (numberLabel) {
+          numberLabel.textContent = `EVENTO #${idx + 1}`;
+        }
+      });
+    }
+
+    btnAddEvent.addEventListener('click', () => {
+      const card = createEventCard(eventCount);
+      eventsContainer.appendChild(card);
+      eventCount++;
+    });
+
+    // Add first event card automatically on load so form is not empty
+    window.addEventListener('DOMContentLoaded', () => {
+      btnAddEvent.click();
+    });
+  </script>
+</body>
+</html>

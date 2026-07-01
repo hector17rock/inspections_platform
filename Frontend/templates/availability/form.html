@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#001e60">
+  <title>{% if audit %}Editar Auditoría{% else %}Nueva Auditoría{% endif %} de Disponibilidad</title>
+  <link rel="manifest" href="/static/manifest.json?v=5">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <link rel="stylesheet" href="/static/walmart-font.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --blue:   #001e60;
+      --spark:  #ffc220;
+      --green:  #2a8703;
+      --red:    #ea1100;
+      --bg:     #f0f4fb;
+      --card:   #ffffff;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --radius: 1rem;
+      --gray-light: #f1f5f9;
+      --border: #e2e8f0;
+    }
+
+    body {
+      font-family: "Bogle", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--blue);
+      color: #fff;
+      padding: 0 1.25rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.3);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: #fff; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; }
+    .brand-sub { font-size: .7rem; opacity: .75; }
+
+    .header-right { display: flex; align-items: center; gap: .75rem; }
+    .nav-btn {
+      background: rgba(255,255,255,.18);
+      border: none; color: #fff; border-radius: .5rem;
+      padding: .4rem .8rem; cursor: pointer; font-size: .8rem; font-weight: 700;
+      text-decoration: none; transition: background .15s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,.3); }
+
+    main {
+      flex: 1;
+      padding: 1rem .75rem 2rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .form-header {
+      margin-bottom: 1.5rem;
+    }
+    .page-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: .25rem;
+    }
+    .page-subtitle {
+      font-size: .85rem;
+      color: var(--muted);
+    }
+
+    /* ===== METADATA CARD ===== */
+    .meta-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .meta-card {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+    }
+    .form-label {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .form-control {
+      padding: .75rem .9rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      border-radius: .5rem;
+      outline: none;
+      transition: border-color .15s;
+      color: var(--text);
+    }
+    .form-control:focus {
+      border-color: var(--blue);
+    }
+
+    /* ===== SECTION TITLE ===== */
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--blue);
+      margin-bottom: 1rem;
+      padding-bottom: .35rem;
+      border-bottom: 2px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    /* ===== MODULAR CARD ===== */
+    .modular-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 1rem;
+      border-left: 5px solid var(--blue);
+    }
+    .modular-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: .75rem;
+      margin-top: .75rem;
+    }
+    @media (min-width: 640px) {
+      .modular-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* ===== RADIO TOGGLE BUTTONS ===== */
+    .status-toggle {
+      display: flex;
+      background: var(--gray-light);
+      padding: .25rem;
+      border-radius: .5rem;
+      border: 1px solid var(--border);
+    }
+    .status-btn {
+      flex: 1;
+      text-align: center;
+      padding: .5rem;
+      font-size: .85rem;
+      font-weight: 800;
+      border-radius: .35rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s, color .15s;
+    }
+    .status-btn-si.active {
+      background: #e8f5e9;
+      color: var(--green);
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    }
+    .status-btn-no.active {
+      background: #ffebee;
+      color: var(--red);
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    }
+    .status-btn-na.active {
+      background: #cbd5e1;
+      color: #334155;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    }
+
+    /* ===== FOOTER BAR ===== */
+    .submit-bar {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+    }
+    .btn {
+      flex: 1;
+      padding: .85rem;
+      border-radius: .75rem;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      transition: background .15s;
+    }
+    .btn-submit {
+      background: var(--blue);
+      color: #fff;
+    }
+    .btn-submit:hover {
+      background: #0041b8;
+    }
+    .btn-cancel {
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .btn-cancel:hover {
+      background: #cbd5e1;
+    }
+
+    /* ===== CONDITIONAL ON-HAND CONTAINER ===== */
+    .oh-fields-container {
+      display: none;
+      background: #f8fafc;
+      border: 1.5px dashed #bfdbfe;
+      border-radius: .5rem;
+      padding: .75rem;
+      margin-top: .75rem;
+    }
+    .oh-fields-container.show {
+      display: block;
+    }
+
+    /* ===== CONDITIONAL PI TABLE CONTAINER ===== */
+    .pi-fields-container {
+      display: none;
+      background: #fdfaf2;
+      border: 1.5px dashed #fcd34d;
+      border-radius: .5rem;
+      padding: .75rem;
+      margin-top: .75rem;
+    }
+    .pi-fields-container.show {
+      display: block;
+    }
+
+    /* ===== PRODUCT DYNAMIC ROW ===== */
+    .product-row {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      background: #ffffff;
+      padding: .5rem;
+      border-radius: .5rem;
+      border: 1px solid var(--border);
+      margin-bottom: .25rem;
+    }
+    .product-row input, .product-row select {
+      padding: .5rem;
+      border-radius: .35rem;
+      border: 1px solid var(--border);
+      font-weight: 600;
+      color: var(--text);
+    }
+    .btn-add-product {
+      background: #eff6ff;
+      color: var(--blue);
+      border: 1px dashed var(--blue);
+      padding: .35rem .75rem;
+      font-size: .8rem;
+      font-weight: 800;
+      border-radius: .5rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      transition: background .15s;
+    }
+    .btn-add-product:hover {
+      background: #dbeafe;
+    }
+    .btn-add-product-pi {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px dashed #f59e0b;
+    }
+    .btn-add-product-pi:hover {
+      background: #fde68a;
+    }
+    .btn-delete-row {
+      background: #fee2e2;
+      color: var(--red);
+      border: 1px solid #fca5a5;
+      padding: .45rem;
+      border-radius: .35rem;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .btn-delete-card {
+      background: #fee2e2;
+      color: var(--red);
+      border: 2px solid #fee2e2;
+      padding: .25rem .75rem;
+      font-size: .8rem;
+      font-weight: 800;
+      border-radius: .5rem;
+      cursor: pointer;
+    }
+    .btn-delete-card:hover {
+      background: #fca5a5;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="/" class="brand">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <img src="/static/wm_logo.png" alt="Walmart" style="height: 2.25rem; object-fit: contain;">
+        <div style="width: 1px; height: 1.5rem; background: rgba(255,255,255,0.3);"></div>
+        <img src="/static/ap_logo.png" alt="Asset Protection" style="height: 2.25rem; object-fit: contain;">
+      </div>
+      <div>
+        <p class="brand-sub">Walmart / AP Investigations</p>
+        <h1 class="brand-title">{% if audit %}Editar Auditoría{% else %}Nueva Auditoría{% endif %}</h1>
+      </div>
+    </a>
+    <div class="header-right">
+      <a href="/availability" class="nav-btn">Ver Historial</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <form action="{% if audit %}/availability/{{ audit.id }}/edit{% else %}/availability/new{% endif %}" method="POST" id="audit-form">
+        <div class="form-header">
+          <h2 class="page-title">{% if audit %}Editar Auditoría #{{ audit.id }}{% else %}Auditoría de Disponibilidad (Availability){% endif %}</h2>
+          <p class="page-subtitle">{% if audit %}Modifica los datos de la auditoría y guarda los cambios.{% else %}Registra el estado de modulares, outs con On Hand y valor de PI Understated.{% endif %}</p>
+        </div>
+
+        <!-- METADATA CARD -->
+        <div class="meta-card">
+          <div class="form-group">
+            <label class="form-label" for="store_id">Número de Tienda</label>
+            <input class="form-control" type="text" id="store_id" name="store_id" value="{% if audit %}{{ audit.store_id }}{% else %}3716{% endif %}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="week_number">Semana Fiscal</label>
+            <input class="form-control" type="text" id="week_number" name="week_number" value="{% if audit %}{{ audit.week_number }}{% else %}{% endif %}" placeholder="Ej. WK 20" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="total_pi_understated">Total de PI Understated</label>
+            <input class="form-control" type="text" id="total_pi_understated" value="$0.00" readonly style="background-color: var(--gray-light); font-family: monospace; color: var(--red); font-weight: 800; font-size: 1.15rem;">
+          </div>
+        </div>
+
+        <!-- SECTION: MODULADORES -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 class="section-title" style="margin-bottom: 0;">Modulares Evaluados</h3>
+          <button type="button" class="btn-add-product" style="background-color: var(--blue); color: #fff; border-color: var(--blue); font-size: .85rem;" onclick="addModularCard()">+ Agregar Modular</button>
+        </div>
+        
+        <!-- Modular Cards Container (fully dynamic) -->
+        <div id="modular_cards_container"></div>
+
+        <!-- SECTION: VALIDACION DE PROCESOS -->
+        <h3 class="section-title" style="margin-top: 2rem;">Validación de Procesos (Trastienda)</h3>
+        
+        <!-- Process 1 -->
+        <div class="modular-card" style="border-left-color: var(--spark);">
+          <strong>1. ¿Todos los vagones fueron finalizados? (Semanal)</strong>
+          <div class="modular-grid" style="grid-template-columns: 1fr 2fr;">
+            <div class="form-group">
+              <label class="form-label">Estado</label>
+              <div class="status-toggle">
+                <input type="hidden" name="process_vagones" id="process_vagones_input" value="SI">
+                <div class="status-btn status-btn-si active" onclick="toggleBtn('process_vagones', null, 'SI')">SI</div>
+                <div class="status-btn status-btn-no" onclick="toggleBtn('process_vagones', null, 'NO')">NO</div>
+                <div class="status-btn status-btn-na" onclick="toggleBtn('process_vagones', null, 'NA')">N/A</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observaciones</label>
+              <input class="form-control" type="text" name="process_vagones_comments" placeholder="Notas sobre vagones">
+            </div>
+          </div>
+        </div>
+
+        <!-- Process 2 -->
+        <div class="modular-card" style="border-left-color: var(--spark);">
+          <strong>2. ¿Se están realizando los pinpoint diariamente? (10 Semanal)</strong>
+          <div class="modular-grid" style="grid-template-columns: 1fr 2fr;">
+            <div class="form-group">
+              <label class="form-label">Estado</label>
+              <div class="status-toggle">
+                <input type="hidden" name="process_pinpoint" id="process_pinpoint_input" value="SI">
+                <div class="status-btn status-btn-si active" onclick="toggleBtn('process_pinpoint', null, 'SI')">SI</div>
+                <div class="status-btn status-btn-no" onclick="toggleBtn('process_pinpoint', null, 'NO')">NO</div>
+                <div class="status-btn status-btn-na" onclick="toggleBtn('process_pinpoint', null, 'NA')">N/A</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observaciones</label>
+              <input class="form-control" type="text" name="process_pinpoint_comments" placeholder="Notas sobre pinpoint">
+            </div>
+          </div>
+        </div>
+
+        <!-- Process 3 -->
+        <div class="modular-card" style="border-left-color: var(--spark);">
+          <strong>3. ¿Bines cumplen con estándares establecidos? (15 Semanal)</strong>
+          <div class="modular-grid" style="grid-template-columns: 1fr 1fr; margin-top: .75rem;">
+            <div class="form-group" style="grid-column: span 2;">
+              <label class="form-label">Estado</label>
+              <div class="status-toggle" style="max-width: 250px;">
+                <input type="hidden" name="process_bines" id="process_bines_input" value="SI">
+                <div class="status-btn status-btn-si active" onclick="toggleBtn('process_bines', null, 'SI')">SI</div>
+                <div class="status-btn status-btn-no" onclick="toggleBtn('process_bines', null, 'NO')">NO</div>
+                <div class="status-btn status-btn-na" onclick="toggleBtn('process_bines', null, 'NA')">N/A</div>
+              </div>
+            </div>
+            
+            <!-- Wrapper for Bines, Topes, and WACOS (visible only if state is NO) -->
+            <div id="process_bines_fields_container" style="grid-column: span 2; display: none;">
+              <!-- Dynamic Bines Findings list -->
+              <div class="form-group" style="border-top: 1px dashed var(--border); padding-top: .75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;">
+                  <div>
+                    <span class="form-label" style="font-size: .8rem; color: var(--blue); font-weight: 800; display: block;">Hallazgos en Bines (Backroom)</span>
+                    <span style="font-size: .6rem; color: var(--muted); font-weight: 700;">FORMATO: 000/000/999</span>
+                  </div>
+                  <button type="button" class="btn-add-product" onclick="addBinRow()">+ Agregar Bin</button>
+                </div>
+                <div id="bines_list_container"></div>
+              </div>
+
+              <!-- Dynamic Topes Findings list -->
+              <div class="form-group" style="border-top: 1px dashed var(--border); padding-top: .75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;">
+                  <div>
+                    <span class="form-label" style="font-size: .8rem; color: #b45309; font-weight: 800; display: block;">Hallazgos en Topes (Risers)</span>
+                    <span style="font-size: .6rem; color: var(--muted); font-weight: 700;">FORMATO: 000/000/999</span>
+                  </div>
+                  <button type="button" class="btn-add-product btn-add-product-pi" onclick="addTopeRow()">+ Agregar Tope</button>
+                </div>
+                <div id="topes_list_container"></div>
+              </div>
+
+              <!-- Dynamic WACOS Findings list -->
+              <div class="form-group" style="border-top: 1px dashed var(--border); padding-top: .75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;">
+                  <div>
+                    <span class="form-label" style="font-size: .8rem; color: var(--green); font-weight: 800; display: block;">Hallazgos en WACOS</span>
+                    <span style="font-size: .6rem; color: var(--muted); font-weight: 700;">FORMATO: 000/000/999</span>
+                  </div>
+                  <button type="button" class="btn-add-product" style="background-color: #e8f5e9; color: var(--green); border-color: var(--green);" onclick="addWacoRow()">+ Agregar WACO</button>
+                </div>
+                <div id="wacos_list_container"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GENERAL ACTION PLAN -->
+        <h3 class="section-title" style="margin-top: 2rem;">Notas / Plan de Acción</h3>
+        <div class="meta-card" style="grid-template-columns: 1fr;">
+          <div class="form-group">
+            <label class="form-label" for="notes">Comentarios Generales y Plan de Acción de AP</label>
+            <textarea class="form-control" id="notes" name="notes" rows="4" placeholder="Describe los acuerdos tomados con el Coach de OPD...">{% if audit %}{{ audit.notes or '' }}{% endif %}</textarea>
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="submit-bar">
+          <a href="{% if audit %}/availability/{{ audit.id }}{% else %}/availability{% endif %}" class="btn btn-cancel">Cancelar</a>
+          <button type="submit" class="btn btn-submit">{% if audit %}Guardar Cambios{% else %}Guardar Auditoría{% endif %}</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // Datos de la auditoria existente (null si es formulario de nueva auditoria)
+    const EDIT_DATA = {% if audit %}{{ audit | tojson }}{% else %}null{% endif %};
+
+    // Load event listener
+    document.addEventListener("DOMContentLoaded", () => {
+      if (EDIT_DATA) {
+        _prefillEditForm(EDIT_DATA);
+      } else {
+        addModularCard();
+      }
+    });
+
+    // Pre-fills the entire form from an existing audit object
+    function _prefillEditForm(d) {
+      // Process status toggles (vagones, pinpoint, bines)
+      toggleBtn('process_vagones', null, d.process_vagones_status || 'SI');
+      const vagCom = document.querySelector('[name=process_vagones_comments]');
+      if (vagCom) vagCom.value = d.process_vagones_comments || '';
+
+      toggleBtn('process_pinpoint', null, d.process_pinpoint_status || 'SI');
+      const pinCom = document.querySelector('[name=process_pinpoint_comments]');
+      if (pinCom) pinCom.value = d.process_pinpoint_comments || '';
+
+      const binesStatus = d.process_bines_status || 'SI';
+      toggleBtn('process_bines', null, binesStatus);
+      if (binesStatus === 'NO') {
+        toggleProcessBinesFields('NO');
+        // Clear auto-added empty rows, then fill with real data
+        ['bines_list_container','topes_list_container','wacos_list_container']
+          .forEach(id => document.getElementById(id).innerHTML = '');
+        (d.process_bines_comments || []).forEach(b => addBinRow(b.loc, b.comments));
+        (d.process_topes_comments || []).forEach(t => addTopeRow(t.loc, t.comments));
+        (d.process_wacos_comments || []).forEach(w => addWacoRow(w.loc, w.comments));
+      }
+
+      // Modular cards
+      (d.modular_items || []).forEach(item => {
+        const i = cardCounter; // capture index before addModularCard increments it
+        addModularCard();
+
+        document.querySelector(`[name=dept_${i}]`).value    = item.department    || '';
+        document.querySelector(`[name=mod_${i}]`).value     = item.modular_verified || '';
+        document.querySelector(`[name=date_${i}]`).value    = item.verification_date || '';
+        document.querySelector(`[name=outs_${i}]`).value    = item.outs_verified  || '';
+        document.querySelector(`[name=comments_${i}]`).value= item.comments      || '';
+        updateCardHeader(i);
+
+        toggleBtn('seq', i, item.modular_sequence || 'SI');
+
+        const ohFound = item.outs_oh_found || 'NO';
+        toggleBtn('outs_oh_found', i, ohFound);
+        if (ohFound === 'SI') {
+          toggleOhFields(i, true);
+          document.getElementById(`product_container_${i}`).innerHTML = '';
+          (item.details || []).filter(d => d.item_type === 'OH').forEach(d =>
+            addProductRow(i, d.upc, d.qty));
+        }
+
+        const piFound = item.understated_pi_found || 'NO';
+        toggleBtn('pi_found', i, piFound);
+        if (piFound === 'SI') {
+          togglePiFields(i, true);
+          document.getElementById(`pi_product_container_${i}`).innerHTML = '';
+          const piItems = document.getElementById(`pi_items_input_${i}`);
+          const piCorr  = document.getElementById(`pi_corr_input_${i}`);
+          if (piItems) piItems.value = item.items_found    || 0;
+          if (piCorr)  piCorr.value  = item.items_corrected|| 0;
+          (item.details || []).filter(d => d.item_type === 'PI').forEach(d =>
+            addPiProductRow(i, d.upc, d.oh_qty, d.physical_qty, d.price));
+          recalculatePiCard(i);
+        }
+      });
+    }
+
+    let cardCounter = 0;
+    const activeCards = new Set();
+
+    // Dynamically adds a new complete Modular Evaluation Card
+    function addModularCard() {
+      const container = document.getElementById("modular_cards_container");
+      const i = cardCounter++;
+      activeCards.add(i);
+      
+      const cardDiv = document.createElement("div");
+      cardDiv.className = "modular-card";
+      cardDiv.id = `modular_card_${i}`;
+      
+      cardDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;">
+          <strong style="color: var(--blue);" id="card_title_${i}">Evaluación Modular #${activeCards.size}</strong>
+          <button type="button" class="btn-delete-card" onclick="removeModularCard(${i})">Eliminar Modular</button>
+        </div>
+        
+        <div class="modular-grid">
+          <div class="form-group">
+            <label class="form-label">Número de Departamento</label>
+            <input class="form-control" type="text" name="dept_${i}" id="dept_input_${i}" placeholder="Ej. 40" oninput="updateCardHeader(${i})" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modular Verificado</label>
+            <input class="form-control" type="text" name="mod_${i}" placeholder="Ej. F6-5" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de Verificación</label>
+            <input class="form-control" type="date" name="date_${i}" id="date_${i}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">¿Modular en Secuencia?</label>
+            <div class="status-toggle">
+              <input type="hidden" name="seq_${i}" id="seq_input_${i}" value="SI">
+              <div class="status-btn status-btn-si active" onclick="toggleBtn('seq', ${i}, 'SI')">SI</div>
+              <div class="status-btn status-btn-no" onclick="toggleBtn('seq', ${i}, 'NO')">NO</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Outs Verificados</label>
+            <input class="form-control" type="text" name="outs_${i}" placeholder="Ej. 3 OUT / 1 con OH" required>
+          </div>
+        </div>
+
+        <!-- OH Outs Toggle Question -->
+        <div class="form-group" style="margin-top: .75rem;">
+          <label class="form-label">¿Hay Outs con On Hand (OH)?</label>
+          <div class="status-toggle" style="max-width: 250px;">
+            <input type="hidden" name="outs_oh_found_${i}" id="outs_oh_found_input_${i}" value="NO">
+            <div class="status-btn status-btn-si" onclick="toggleBtn('outs_oh_found', ${i}, 'SI'); toggleOhFields(${i}, true)">SI</div>
+            <div class="status-btn status-btn-no active" onclick="toggleBtn('outs_oh_found', ${i}, 'NO'); toggleOhFields(${i}, false)">NO</div>
+          </div>
+        </div>
+
+        <!-- Product Details List (Out con OH - Dynamic list of UPC and QTY only) -->
+        <div class="oh-fields-container" id="oh_fields_container_${i}">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;">
+            <span class="form-label" style="font-size: .75rem; color: var(--blue);">Productos Outs con On Hand</span>
+            <button type="button" class="btn-add-product" onclick="addProductRow(${i})">+ Agregar UPC/QTY</button>
+          </div>
+          <div id="product_container_${i}"></div>
+        </div>
+        
+        <!-- PI Understated Toggle Question and Counts Side-by-Side -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin-top: .75rem; align-items: flex-end;">
+          <div class="form-group">
+            <label class="form-label">¿Se encontró "understated" PI?</label>
+            <div class="status-toggle">
+              <input type="hidden" name="pi_found_${i}" id="pi_found_input_${i}" value="NO">
+              <div class="status-btn status-btn-si" onclick="toggleBtn('pi_found', ${i}, 'SI'); togglePiFields(${i}, true)">SI</div>
+              <div class="status-btn status-btn-no active" onclick="toggleBtn('pi_found', ${i}, 'NO'); togglePiFields(${i}, false)">NO</div>
+            </div>
+          </div>
+          <div class="form-group pi-items-stats-${i}" style="display: none;">
+            <label class="form-label" style="font-size: .65rem; color: var(--muted); font-weight: bold; text-transform: uppercase;">Cant. de PI Understated Encontrados</label>
+            <input class="form-control" type="number" name="pi_items_${i}" id="pi_items_input_${i}" placeholder="Ej. 3" min="0">
+          </div>
+          <div class="form-group pi-items-stats-${i}" style="display: none;">
+            <label class="form-label" style="font-size: .65rem; color: var(--muted); font-weight: bold; text-transform: uppercase;">Cant. de Items de PI Encontrados</label>
+            <input class="form-control" type="number" name="pi_corr_${i}" id="pi_corr_input_${i}" placeholder="Ej. 3" min="0">
+          </div>
+        </div>
+        
+        <!-- PI Understated Dynamic Details Table (UPC, OH Qty, Physical Qty, Price, Calculated Value) -->
+        <div class="pi-fields-container" id="pi_fields_container_${i}">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;">
+            <span class="form-label" style="font-size: .75rem; color: #b45309;">Productos con PI Understated (Subestimado)</span>
+            <button type="button" class="btn-add-product btn-add-product-pi" onclick="addPiProductRow(${i})">+ Agregar UPC/Precios</button>
+          </div>
+          
+          <div id="pi_product_container_${i}"></div>
+          
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: .5rem; margin-top: .75rem; font-weight: 800; font-size: .9rem;">
+            <span style="color: var(--muted);">TOTAL DE PI SUBESTIMADO:</span>
+            <span style="color: var(--red); font-family: monospace;" id="pi_total_display_${i}">$0.00</span>
+            <input type="hidden" name="pi_val_${i}" id="pi_val_input_${i}" value="0.00">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: .75rem;">
+          <label class="form-label">Comentarios</label>
+          <input class="form-control" type="text" name="comments_${i}" placeholder="Ej. El modular cuenta con su secuencia.">
+        </div>
+      `;
+      
+      container.appendChild(cardDiv);
+      
+      reindexCardHeaders();
+    }
+
+    // Safely removes a Modular Evaluation Card and updates calculations
+    function removeModularCard(index) {
+      if (activeCards.size <= 1) {
+        alert("Debes mantener al menos una evaluación de modular.");
+        return;
+      }
+      
+      const card = document.getElementById(`modular_card_${index}`);
+      if (card) {
+        card.remove();
+        activeCards.delete(index);
+        reindexCardHeaders();
+        
+        // Force recalculation of global total
+        recalculateGlobalPiTotal();
+      }
+    }
+
+    // Re-indexes visual numbers (e.g. Modular #1, Modular #2) when cards are deleted/added
+    function reindexCardHeaders() {
+      let count = 1;
+      activeCards.forEach(idx => {
+        const titleEl = document.getElementById(`card_title_${idx}`);
+        const deptInput = document.getElementById(`dept_input_${idx}`);
+        if (titleEl) {
+          const deptVal = deptInput ? deptInput.value.trim() : "";
+          titleEl.textContent = deptVal ? `Departamento ${deptVal}` : `Evaluación Modular #${count}`;
+        }
+        count++;
+      });
+    }
+
+    function toggleBtn(type, index, value) {
+      const inputId = index !== null ? `${type}_input_${index}` : `${type}_input`;
+      const input = document.getElementById(inputId);
+      input.value = value;
+      
+      const toggleContainer = input.parentElement;
+      const buttons = toggleContainer.querySelectorAll('.status-btn');
+      buttons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.trim() === value) {
+          btn.classList.add('active');
+        }
+      });
+
+      // Toggles Bines, Topes, and WACOS fields dynamically based on standards compliance status
+      if (type === "process_bines") {
+        toggleProcessBinesFields(value);
+      }
+    }
+
+    function toggleProcessBinesFields(value) {
+      const container = document.getElementById("process_bines_fields_container");
+      if (!container) return;
+      if (value === "NO") {
+        container.style.display = "block";
+        // If empty, automatically render 1 helper row for each
+        if (document.getElementById("bines_list_container").children.length === 0) {
+          addBinRow();
+        }
+        if (document.getElementById("topes_list_container").children.length === 0) {
+          addTopeRow();
+        }
+        if (document.getElementById("wacos_list_container").children.length === 0) {
+          addWacoRow();
+        }
+      } else {
+        container.style.display = "none";
+        // Clear all rows to avoid storing blank lists
+        document.getElementById("bines_list_container").innerHTML = "";
+        document.getElementById("topes_list_container").innerHTML = "";
+        document.getElementById("wacos_list_container").innerHTML = "";
+      }
+    }
+
+    // Dynamic header title update based on department input
+    function updateCardHeader(index) {
+      const deptVal = document.getElementById(`dept_input_${index}`).value.trim();
+      const titleEl = document.getElementById(`card_title_${index}`);
+      if (titleEl) {
+        titleEl.textContent = deptVal ? `Departamento ${deptVal}` : `Evaluación Modular #${[...activeCards].indexOf(index) + 1}`;
+      }
+    }
+
+    // Toggle showing container for Outs with On Hand
+    function toggleOhFields(index, show) {
+      const container = document.getElementById(`oh_fields_container_${index}`);
+      if (show) {
+        container.classList.add('show');
+        const productContainer = document.getElementById(`product_container_${index}`);
+        if (productContainer.children.length === 0) {
+          addProductRow(index);
+        }
+      } else {
+        container.classList.remove('show');
+        document.getElementById(`product_container_${index}`).innerHTML = '';
+      }
+    }
+
+    // Dynamic row for Outs with OH (Implicit type="OH", columns: UPC and QTY)
+    function addProductRow(cardIndex, upc = "", qty = "") {
+      const container = document.getElementById(`product_container_${cardIndex}`);
+      const rowId = 'oh_row_' + cardIndex + '_' + Date.now() + Math.random().toString(36).substr(2, 5);
+      
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "product-row";
+      rowDiv.id = rowId;
+      
+      rowDiv.innerHTML = `
+        <span style="font-size: .75rem; font-weight: 800; color: var(--blue); min-width: 80px;">OUT CON OH:</span>
+        <input type="text" name="item_upc_oh_${cardIndex}" placeholder="UPC del Producto" value="${upc}" style="flex: 2; font-family: monospace;" required>
+        <input type="number" name="item_qty_oh_${cardIndex}" placeholder="Cantidad (QTY)" value="${qty}" style="flex: 1;" min="1" required>
+        <button type="button" class="btn-delete-row" onclick="document.getElementById('${rowId}').remove()">&times;</button>
+      `;
+      
+      container.appendChild(rowDiv);
+    }
+
+    // Toggle showing container for PI Understated
+    function togglePiFields(index, show) {
+      const container = document.getElementById(`pi_fields_container_${index}`);
+      const statsElements = document.querySelectorAll(`.pi-items-stats-${index}`);
+      if (show) {
+        container.classList.add('show');
+        statsElements.forEach(el => el.style.display = 'block');
+        const piContainer = document.getElementById(`pi_product_container_${index}`);
+        if (piContainer.children.length === 0) {
+          addPiProductRow(index);
+        }
+      } else {
+        container.classList.remove('show');
+        statsElements.forEach(el => {
+          el.style.display = 'none';
+          const input = el.querySelector('input');
+          if (input) input.value = '';
+        });
+        document.getElementById(`pi_product_container_${index}`).innerHTML = '';
+        recalculatePiCard(index);
+      }
+    }
+
+    // Dynamic row for PI Understated (columns: UPC, OH, Físico, Precio, calculated subtotal)
+    function addPiProductRow(cardIndex, upc = "", oh = "", physical = "", price = "") {
+      const container = document.getElementById(`pi_product_container_${cardIndex}`);
+      const rowId = 'pi_row_' + cardIndex + '_' + Date.now() + Math.random().toString(36).substr(2, 5);
+      
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "product-row";
+      rowDiv.id = rowId;
+      rowDiv.style.flexWrap = "wrap";
+      rowDiv.style.borderColor = "#fcd34d";
+      
+      rowDiv.innerHTML = `
+        <input type="text" name="item_upc_pi_${cardIndex}" placeholder="UPC del Producto" value="${upc}" style="flex: 2; font-family: monospace;" required>
+        <input type="number" name="item_oh_pi_${cardIndex}" placeholder="On Hand" value="${oh}" style="width: 85px;" min="0" oninput="calculateRowVal('${rowId}')" required>
+        <input type="number" name="item_physical_pi_${cardIndex}" placeholder="Físico" value="${physical}" style="width: 85px;" min="0" oninput="calculateRowVal('${rowId}')" required>
+        <input type="number" step="0.01" name="item_price_pi_${cardIndex}" placeholder="Precio $" value="${price}" style="width: 100px;" oninput="calculateRowVal('${rowId}')" required>
+        
+        <div style="font-weight: 800; font-family: monospace; color: var(--red); min-width: 90px; text-align: right; padding: 0 .25rem;">
+          Sub: $<span class="row-subtotal">0.00</span>
+        </div>
+        <button type="button" class="btn-delete-row" onclick="document.getElementById('${rowId}').remove(); recalculatePiCard(${cardIndex});">&times;</button>
+      `;
+      
+      container.appendChild(rowDiv);
+      calculateRowVal(rowId);
+    }
+
+    // Helper to calculate single row subtotal of PI Understated
+    function calculateRowVal(rowId) {
+      const row = document.getElementById(rowId);
+      if(!row) return;
+      
+      const ohVal = parseFloat(row.querySelector('input[name^="item_oh_pi_"]').value || 0);
+      const physVal = parseFloat(row.querySelector('input[name^="item_physical_pi_"]').value || 0);
+      const priceVal = parseFloat(row.querySelector('input[name^="item_price_pi_"]').value || 0);
+      
+      const understatedQty = Math.max(0, physVal - ohVal);
+      const subtotal = understatedQty * priceVal;
+      
+      row.querySelector('.row-subtotal').textContent = subtotal.toFixed(2);
+      
+      const cardIndex = parseInt(rowId.split('_')[2]);
+      recalculatePiCard(cardIndex);
+    }
+
+    // Recalculates card's total PI Understated and updates display + hidden input
+    function recalculatePiCard(cardIndex) {
+      const container = document.getElementById(`pi_product_container_${cardIndex}`);
+      let cardTotal = 0.0;
+      
+      if (container) {
+        container.querySelectorAll('.product-row').forEach(row => {
+          const rowSub = parseFloat(row.querySelector('.row-subtotal').textContent || 0);
+          cardTotal += rowSub;
+        });
+      }
+      
+      document.getElementById(`pi_total_display_${cardIndex}`).textContent = '$' + cardTotal.toFixed(2);
+      const hiddenInput = document.getElementById(`pi_val_input_${cardIndex}`);
+      if (hiddenInput) {
+        hiddenInput.value = cardTotal.toFixed(2);
+      }
+      
+      recalculateGlobalPiTotal();
+    }
+
+    // Recalculates global PI total sum across all active evaluation cards
+    function recalculateGlobalPiTotal() {
+      let globalTotal = 0.0;
+      activeCards.forEach(idx => {
+        const el = document.getElementById(`pi_val_input_${idx}`);
+        const inputVal = el ? parseFloat(el.value || 0) : 0;
+        globalTotal += inputVal;
+      });
+      
+      const globalInput = document.getElementById('total_pi_understated');
+      if (globalInput) {
+        globalInput.value = '$' + globalTotal.toFixed(2);
+      }
+    }
+
+    // Dynamic row for Bines (coordinando localización y hallazgo)
+    function addBinRow(loc = "", comments = "") {
+      const container = document.getElementById("bines_list_container");
+      const rowId = 'bin_row_' + Date.now() + Math.random().toString(36).substr(2, 5);
+      
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "product-row";
+      rowDiv.id = rowId;
+      rowDiv.style.display = "grid";
+      rowDiv.style.gridTemplateColumns = "1.2fr 2.8fr auto";
+      rowDiv.style.gap = ".5rem";
+      
+      rowDiv.innerHTML = `
+        <input type="text" name="process_bines_loc" placeholder="Localización: 000/000/999" value="${loc}" style="font-family: monospace;" required>
+        <input type="text" name="process_bines_comments" placeholder="Describir Hallazgo de Bin" value="${comments}" required>
+        <button type="button" class="btn-delete-row" onclick="document.getElementById('${rowId}').remove()">&times;</button>
+      `;
+      container.appendChild(rowDiv);
+    }
+
+    // Dynamic row for Topes (coordinando localización y hallazgo)
+    function addTopeRow(loc = "", comments = "") {
+      const container = document.getElementById("topes_list_container");
+      const rowId = 'tope_row_' + Date.now() + Math.random().toString(36).substr(2, 5);
+      
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "product-row";
+      rowDiv.id = rowId;
+      rowDiv.style.display = "grid";
+      rowDiv.style.gridTemplateColumns = "1.2fr 2.8fr auto";
+      rowDiv.style.gap = ".5rem";
+      rowDiv.style.borderColor = "#fcd34d";
+      
+      rowDiv.innerHTML = `
+        <input type="text" name="process_topes_loc" placeholder="Localización: 000/000/999" value="${loc}" style="font-family: monospace;" required>
+        <input type="text" name="process_topes_comments" placeholder="Describir Hallazgo de Tope" value="${comments}" required>
+        <button type="button" class="btn-delete-row" onclick="document.getElementById('${rowId}').remove()">&times;</button>
+      `;
+      container.appendChild(rowDiv);
+    }
+
+    // Dynamic row for WACOS (coordinando localización y hallazgo)
+    function addWacoRow(loc = "", comments = "") {
+      const container = document.getElementById("wacos_list_container");
+      const rowId = 'waco_row_' + Date.now() + Math.random().toString(36).substr(2, 5);
+      
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "product-row";
+      rowDiv.id = rowId;
+      rowDiv.style.display = "grid";
+      rowDiv.style.gridTemplateColumns = "1.2fr 2.8fr auto";
+      rowDiv.style.gap = ".5rem";
+      rowDiv.style.borderColor = "var(--green)";
+      
+      rowDiv.innerHTML = `
+        <input type="text" name="process_wacos_loc" placeholder="Localización: 000/000/999" value="${loc}" style="font-family: monospace;" required>
+        <input type="text" name="process_wacos_comments" placeholder="Describir Hallazgo de WACO" value="${comments}" required>
+        <button type="button" class="btn-delete-row" onclick="document.getElementById('${rowId}').remove()">&times;</button>
+      `;
+      container.appendChild(rowDiv);
+    }
+  </script>
+
+  <footer>
+    <p>Desarrollado con  por Hector & Toby</p>
+  </footer>
+
+</body>
+</html>

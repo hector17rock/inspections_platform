@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#001e60">
+  <title>Resultado del Touring - Auditoría OPD</title>
+  <link rel="manifest" href="/static/manifest.json?v=5">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <link rel="stylesheet" href="/static/walmart-font.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --blue:   #001e60;
+      --spark:  #ffc220;
+      --green:  #2a8703;
+      --red:    #ea1100;
+      --bg:     #f0f4fb;
+      --card:   #ffffff;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --radius: 1rem;
+      --border: #e2e8f0;
+    }
+
+    body {
+      font-family: "Bogle", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--blue);
+      color: #fff;
+      padding: 0 1.25rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.3);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: #fff; }
+    .spark-icon { width: 1.75rem; height: 1.75rem; fill: var(--spark); flex-shrink: 0; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; }
+    .brand-sub { font-size: .7rem; opacity: .75; }
+
+    .header-right { display: flex; align-items: center; gap: .75rem; }
+    .nav-btn {
+      background: rgba(255,255,255,.18);
+      border: none; color: #fff; border-radius: .5rem;
+      padding: .4rem .8rem; cursor: pointer; font-size: .8rem; font-weight: 700;
+      text-decoration: none; transition: background .15s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,.3); }
+
+    main {
+      flex: 1;
+      padding: 1rem .75rem 2rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .print-only-header { display: none; }
+
+    /* Print styling */
+    @media print {
+      .print-only-header { display: flex !important; }
+      header, .no-print, footer { display: none !important; }
+      body { background: #fff; color: #000; }
+      main { padding: 0; }
+      .meta-card, .notes-card, .category-card {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        page-break-inside: avoid;
+      }
+    }
+
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 2px solid var(--border);
+      border-radius: .5rem;
+      padding: .45rem .9rem;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+    }
+    .btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    .btn-danger {
+      background: #fef2f2;
+      color: var(--red);
+      border: 2px solid #fca5a5;
+    }
+    .btn-danger:hover { background: #fee2e2; border-color: var(--red); }
+
+    /* ===== SUMMARY GRID ===== */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (min-width: 640px) {
+      .summary-grid {
+        grid-template-columns: 1.2fr 2fr;
+      }
+    }
+
+    /* ===== SCORE CARD ===== */
+    .score-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border-top: 6px solid var(--muted);
+    }
+    .score-card.score-high { border-top-color: var(--green); }
+    .score-card.score-med { border-top-color: var(--spark); }
+    .score-card.score-low { border-top-color: var(--red); }
+
+    .score-num {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: .25rem;
+    }
+    .score-high-txt { color: var(--green); }
+    .score-med-txt { color: #d97706; }
+    .score-low-txt { color: var(--red); }
+
+    .score-lbl {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .score-status {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-top: .5rem;
+      padding: .25rem .75rem;
+      border-radius: 999px;
+    }
+    .status-high { background: #e8f5e9; color: var(--green); }
+    .status-med { background: #fffde7; color: #b45309; }
+    .status-low { background: #ffebee; color: var(--red); }
+
+    /* ===== META INFO CARD ===== */
+    .meta-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .meta-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: .85rem;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .meta-lbl {
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .meta-val {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: .15rem;
+    }
+
+    /* ===== EXECUTIVE INSIGHTS ===== */
+    .insights-card {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .insights-title {
+      font-size: .85rem;
+      font-weight: 800;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: .4rem;
+    }
+    .insights-body {
+      font-size: .85rem;
+      line-height: 1.45;
+      color: #1e3a8a;
+    }
+
+    /* ===== CATEGORY RESULTS ===== */
+    .category-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .category-header {
+      background: var(--gray-light);
+      padding: .85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--blue);
+    }
+    .response-item {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .response-item:last-child {
+      border-bottom: none;
+    }
+    
+    .response-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .response-question {
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    /* Badge results */
+    .response-badge {
+      font-size: .75rem;
+      font-weight: 800;
+      padding: .25rem .65rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .badge-yes { background: #e8f5e9; color: var(--green); }
+    .badge-no { background: #ffebee; color: var(--red); }
+    .badge-na { background: #f1f5f9; color: var(--muted); }
+
+    /* Failure description */
+    .failure-comment {
+      background: #fdf2f2;
+      border: 1px dashed #fca5a5;
+      border-radius: .4rem;
+      padding: .5rem .75rem;
+      font-size: .85rem;
+      color: #991b1b;
+      margin-top: .25rem;
+    }
+    .failure-comment strong {
+      font-weight: 700;
+    }
+
+    /* ===== GENERAL NOTES CARD ===== */
+    .notes-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 1.5rem;
+    }
+    .notes-title {
+      font-size: .85rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: .5rem;
+    }
+    .notes-body {
+      font-size: .95rem;
+      line-height: 1.5;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="no-print">
+    <a href="/audits" class="brand">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <img src="/static/wm_logo.png" alt="Walmart" style="height: 2.25rem; object-fit: contain;">
+        <div style="width: 1px; height: 1.5rem; background: rgba(255,255,255,0.3);"></div>
+        <img src="/static/ap_logo.png" alt="Asset Protection" style="height: 2.25rem; object-fit: contain;">
+      </div>
+      <div>
+        <p class="brand-sub">Walmart / AP Investigations</p>
+        <h1 class="brand-title">Resultado de Auditoría</h1>
+      </div>
+    </a>
+    <div class="header-right">
+      <a href="/audits" class="nav-btn">Atrás</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      
+      <!-- Action Bar (Hide in Print) -->
+      <div class="action-bar no-print">
+        <a href="/audits" class="btn-secondary">
+          <span>&#8592; Regresar</span>
+        </a>
+        <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
+          <!-- Boton de Descarga de PDF Directa (Bypassa restricciones de IT) -->
+          <button onclick="downloadHTMLAsPDF()" class="btn-secondary" style="background: var(--blue); color: white; border-color: var(--blue); cursor: pointer; border-style: none;">
+            <span>Descargar PDF</span>
+          </button>
+          
+          <!-- Boton de Impresion Fisica -->
+          <button onclick="window.print()" class="btn-secondary" style="background: #e2e8f0; color: #1e293b; border-color: #cbd5e1;">
+            <span>Imprimir Reporte</span>
+          </button>
+          
+          {% set email_subject = "[AP Auditoria] Touring Fulfillment OPD - Tienda #" ~ audit.store_id ~ " - " ~ audit.score ~ "%" %}
+          {% set email_body = "Hola Equipo de Gerencia / Coach de OPD,\n\nSe ha completado el Touring Fulfillment de OPD en la Tienda #" ~ audit.store_id ~ ".\n\nRESUMEN DE AUDITORIA:\n- Auditor: " ~ audit.auditor_name ~ "\n- Fecha: " ~ audit.formatted_date %}
+          {% if audit.week_number %}
+            {% set email_body = email_body ~ "\n- Semana Fiscal: " ~ audit.week_number %}
+          {% endif %}
+          {% if audit.discussed_with %}
+            {% set email_body = email_body ~ "\n- Discutida con: " ~ audit.discussed_with %}
+          {% endif %}
+          {% set email_body = email_body ~ "\n- Score de Compliance: " ~ audit.score ~ "%\n" %}
+          
+          {% set email_body = email_body ~ "\nHALLAZGOS DETECTADOS (NO CUMPLE):\n" %}
+          {% set has_fails = [] %}
+          {% for r in audit.responses %}
+            {% if r.status == 'no' %}
+              {% set email_body = email_body ~ "- " ~ r.question ~ " (Hallazgo: " ~ r.comment ~ ")\n" %}
+              {% if has_fails.append(1) %}{% endif %}
+            {% endif %}
+          {% endfor %}
+          {% if not has_fails %}
+            {% set email_body = email_body ~ "Ninguno. ¡Excelente trabajo!\n" %}
+          {% endif %}
+          
+          {% set email_body = email_body ~ "\nPor favor, tomen accion sobre los hallazgos correspondientes para asegurar el cumplimiento operativo y la seguridad en el area.\n\nAtentamente,\n" ~ audit.auditor_name ~ "\nAsset Protection Investigations" %}
+          
+          <a href="https://wmlink.wal-mart.com/wire" target="_blank" class="btn-secondary" style="background: var(--spark); color: #1e293b; border-color: var(--spark); text-decoration: none;">
+            <span>Enviar por Email</span>
+          </a>
+          
+          <form action="/audits/{{ audit.id }}/delete" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar esta auditoría permanentemente?')">
+            <button type="submit" class="btn-secondary btn-danger">
+              <span>Eliminar</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Header visible ONLY when printing/generating PDF -->
+      <div class="print-only-header" style="align-items: center; justify-content: space-between; border-bottom: 3px double var(--blue); padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <img src="/static/wm_logo.png" alt="Walmart" style="height: 3rem; object-fit: contain;">
+          <div style="width: 1px; height: 2rem; background: #cbd5e1;"></div>
+          <img src="/static/ap_logo.png" alt="Asset Protection" style="height: 3rem; object-fit: contain;">
+        </div>
+        <div style="text-align: right;">
+          <h2 style="font-family: 'Bogle', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--blue); text-transform: uppercase; margin: 0;">Reporte de Auditoría</h2>
+          <p style="font-family: 'Bogle', sans-serif; font-size: .8rem; color: var(--muted); margin: 0;">Touring Fulfillment OPD</p>
+        </div>
+      </div>
+
+      <!-- Executive Insights (Top) -->
+      {% set fail_count = 0 %}
+      {% for r in audit.responses %}
+        {% if r.status == 'no' %}{% set fail_count = fail_count + 1 %}{% endif %}
+      {% endfor %}
+      
+      <div class="insights-card">
+        <h3 class="insights-title">Resumen Ejecutivo del Investigador</h3>
+        <p class="insights-body">
+          La auditoría de Touring Fulfillment de OPD arrojó una puntuación del <strong>{{ audit.score }}%</strong>. 
+          {% if audit.score >= 90 %}
+            El departamento de OPD demuestra un <strong>alto nivel de cumplimiento operativo y controles robustos</strong>. Siga manteniendo estos estándares de seguridad y control de merma.
+          {% elif audit.score >= 80 %}
+            Se detectaron algunas <strong>brechas menores en controles o seguridad</strong> que deben atenderse de inmediato. Se recomienda un seguimiento con el Coach de OPD dentro de las próximas 48 horas.
+          {% else %}
+            ¡ATENCIÓN! Se han identificado <strong>vulnerabilidades críticas en la seguridad y/o cumplimiento</strong> con {{ fail_count }} fallas activas. Se requiere un plan de acción formal correctivo firmado por la gerencia de inmediato.
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Dashboard Row (Score & Meta) -->
+      <div class="summary-grid">
+        
+        <!-- Score Card -->
+        {% set score_class = 'score-low' %}
+        {% set score_txt_class = 'score-low-txt' %}
+        {% set score_lbl = 'Insatisfactorio' %}
+        {% set score_status_class = 'status-low' %}
+        
+        {% if audit.score >= 90 %}
+          {% set score_class = 'score-high' %}
+          {% set score_txt_class = 'score-high-txt' %}
+          {% set score_lbl = 'Sobresaliente' %}
+          {% set score_status_class = 'status-high' %}
+        {% elif audit.score >= 80 %}
+          {% set score_class = 'score-med' %}
+          {% set score_txt_class = 'score-med-txt' %}
+          {% set score_lbl = 'Necesita Mejora' %}
+          {% set score_status_class = 'status-med' %}
+        {% endif %}
+        
+        <div class="score-card {{ score_class }}">
+          <div class="score-num {{ score_txt_class }}">{{ audit.score }}%</div>
+          <div class="score-lbl">Compliance Score</div>
+          <div class="score-status {{ score_status_class }}">{{ score_lbl }}</div>
+        </div>
+
+        <!-- Meta Info Card -->
+        <div class="meta-card">
+          <h3 class="meta-title">Datos del Touring</h3>
+          <div class="meta-grid">
+            <div class="meta-item">
+              <span class="meta-lbl">Tienda</span>
+              <span class="meta-val">#{{ audit.store_id }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-lbl">Semana Fiscal</span>
+              <span class="meta-val">{{ audit.week_number or "N/A" }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-lbl">Auditor AP</span>
+              <span class="meta-val">{{ audit.auditor_name }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-lbl">Discutida Con</span>
+              <span class="meta-val" style="font-size: 0.95rem;">{{ audit.discussed_with or "No indicada" }}</span>
+            </div>
+            <div class="meta-item" style="grid-column: span 2;">
+              <span class="meta-lbl">Fecha y Hora</span>
+              <span class="meta-val" style="font-size: 0.9rem;">{{ audit.formatted_date }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- General Notes (If any) -->
+      {% if audit.notes %}
+        <div class="notes-card">
+          <h3 class="notes-title">Comentarios Generales & Plan de Accion</h3>
+          <p class="notes-body">{{ audit.notes }}</p>
+        </div>
+      {% endif %}
+
+      <!-- Category Detailed Checklists -->
+      {% set grouped = {} %}
+      {% for r in audit.responses %}
+        {% if r.category not in grouped %}
+          {% set _ = grouped.update({r.category: []}) %}
+        {% endif %}
+        {% set _ = grouped[r.category].append(r) %}
+      {% endfor %}
+
+      {% for category, items in grouped.items() %}
+        <div class="category-card">
+          <div class="category-header">{{ category }}</div>
+          
+          {% for r in items %}
+            <div class="response-item">
+              <div class="response-top">
+                <span class="response-question">{{ r.question }}</span>
+                {% if r.status == 'yes' %}
+                  <span class="response-badge badge-yes">CUMPLE</span>
+                {% elif r.status == 'no' %}
+                  <span class="response-badge badge-no">NO CUMPLE</span>
+                {% else %}
+                  <span class="response-badge badge-na">N/A</span>
+                {% endif %}
+              </div>
+              
+              {% if r.status == 'no' and r.comment %}
+                <div class="failure-comment">
+                  <strong>Hallazgo:</strong> {{ r.comment }}
+                </div>
+              {% elif r.comment %}
+                <div class="failure-comment" style="background:#f8fafc; border-color:#cbd5e1; color:var(--text);">
+                  <strong>Nota:</strong> {{ r.comment }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <!-- Executive Insights (Bottom) -->
+      <div class="insights-card" style="margin-top: 2rem; background: #fffbeb; border-color: #fef08a;">
+        <h3 class="insights-title" style="color: #b45309;">Compromiso & Firmas de Cierre</h3>
+        <p class="insights-body" style="color: #78350f; font-size: .8rem;">
+          Este reporte certifica que se realizó el Touring Fulfillment OPD conforme a las guías de Walmart de Protección de Activos. Los hallazgos identificados como "NO CUMPLE" requieren una solución inmediata.
+        </p>
+        <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; border-top: 1px solid #fef08a; padding-top: 1rem; flex-wrap: wrap; gap: 1rem;">
+          <div style="font-size: .75rem; color: #78350f;">Firma AP Investigator: __________________________</div>
+          {% if audit.discussed_with and audit.discussed_with != "No fue discutida con un Gerente" %}
+            <div style="font-size: .75rem; color: #78350f;">Firma de Gerente ({{ audit.discussed_with }}): __________________________</div>
+          {% else %}
+            <div style="font-size: .75rem; color: #78350f;">Firma Coach/TL/Gerente OPD: __________________________</div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="no-print">
+    <p>Desarrollado con  por Hector & Toby </p>
+  </footer>
+
+  <!-- html2pdf library loaded locally to bypass corporate proxy blocks -->
+  <script src="/static/html2pdf.bundle.min.js"></script>
+  <script>
+    function downloadHTMLAsPDF() {
+      // Find elements
+      const noPrintElements = document.querySelectorAll('.no-print');
+      const printHeader = document.querySelector('.print-only-header');
+      const element = document.querySelector('.container');
+      
+      // Hide buttons/nav-bars temporarily
+      noPrintElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
+      
+      // Show print-only header (logos, official titles) temporarily
+      if (printHeader) {
+        printHeader.style.setProperty('display', 'flex', 'important');
+      }
+      
+      // Define dynamic clean file name
+      const storeId = "{{ audit.store_id }}";
+      const rawDate = "{{ audit.created_at }}".substring(0, 16).replace(":", "-").replace("T", "_");
+      const filename = `Auditoria_Fulfillment_Tienda_${storeId}_${rawDate}.pdf`;
+      
+      const opt = {
+        margin:       [12, 12, 12, 12], // clean uniform borders
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false,
+          letterRendering: true
+        },
+        jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
+      };
+      
+      // Run generation
+      html2pdf().set(opt).from(element).save().then(() => {
+        // Restore elements back to original CSS states
+        noPrintElements.forEach(el => el.style.display = '');
+        if (printHeader) printHeader.style.display = '';
+      }).catch(err => {
+        console.error('Error generating PDF:', err);
+        // Restore on error too
+        noPrintElements.forEach(el => el.style.display = '');
+        if (printHeader) printHeader.style.display = '';
+      });
+    }
+  </script>
+</body>
+</html>

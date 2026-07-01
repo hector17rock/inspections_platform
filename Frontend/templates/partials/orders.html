@@ -1,0 +1,112 @@
+{# Partial: dashboard OPD — dos columnas en desktop, deteccion de nuevas ordenes #}
+
+{# data-order-ids permite al JS detectar ordenes nuevas #}
+<div data-order-ids="{{ order_ids }}"></div>
+
+<!-- Stats bar -->
+<div class="stats">
+  <div class="stat-card">
+    <p class="stat-num c-blue">{{ active | length }}</p>
+    <p class="stat-lbl">Pendientes</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-num {% if urgent_count > 0 %}c-red{% else %}c-gray{% endif %}">{{ urgent_count }}</p>
+    <p class="stat-lbl">Criticas</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-num c-green">{{ ready | length }}</p>
+    <p class="stat-lbl">Listas</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-num c-spark">{{ total }}</p>
+    <p class="stat-lbl">Total</p>
+  </div>
+</div>
+
+<!-- Grid de dos columnas en desktop -->
+<div class="orders-grid">
+
+  <!-- Columna izquierda: ordenes activas -->
+  <div>
+    <p class="col-header">Ordenes activas</p>
+
+    {% if active %}
+    {% for order in active %}
+    <div class="order-card {{ order.urgency }}">
+      <div class="card-body">
+
+        <div class="card-top">
+          <div>
+            <span class="order-id"># {{ order.id }}</span>
+            <p class="order-name">{{ order.customer }}</p>
+          </div>
+          <span class="badge {% if order.status == 'Pendiente' %}badge-blue{% else %}badge-yellow{% endif %}">
+            {{ order.status }}
+          </span>
+        </div>
+
+        <div class="products">
+          {% for p in order.products %}
+          <span class="product-chip">{{ p }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="card-footer">
+          <div class="wait-row">
+            <svg class="wait-icon {{ order.urgency }}-txt" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            <span class="wait-txt {{ order.urgency }}-txt">
+              {% if order.wait_mins < 1 %}Recien llegada
+              {% else %}{{ order.wait_mins }} min esperando{% endif %}
+            </span>
+          </div>
+          {% if order.urgency == 'critico' %}
+          <span class="priority-tag">PRIORIDAD ALTA</span>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">&#10003;</div>
+      <p class="empty-title">Sin ordenes pendientes</p>
+      <p class="empty-sub">Todo al dia en OPD</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Columna derecha: listas para entrega -->
+  <div>
+    <p class="col-header">Listas para entrega</p>
+
+    {% if ready %}
+    {% for order in ready %}
+    <div class="ready-card">
+      <div>
+        <span class="order-id" style="display:block">&#35; {{ order.id }}</span>
+        <p class="ready-name">{{ order.customer }}</p>
+        <p class="ready-sub">{{ order.products | length }} articulos</p>
+      </div>
+      <span class="badge badge-green">LISTO</span>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">&#9201;</div>
+      <p class="empty-title" style="color:var(--muted)">Sin ordenes listas</p>
+      <p class="empty-sub">Las ordenes apareceran aqui cuando esten listas</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<p class="timestamp">
+  Actualizado: {{ updated_at }} &nbsp;|&nbsp; Refresca cada 5 seg
+  {% if mock_mode %}&nbsp;|&nbsp; <span style="color:#f59e0b;font-weight:700">DATOS DE PRUEBA</span>{% endif %}
+</p>

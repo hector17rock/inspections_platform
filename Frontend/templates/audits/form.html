@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#001e60">
+  <title>Nuevo Touring - Auditoría OPD</title>
+  <link rel="manifest" href="/static/manifest.json?v=5">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <link rel="stylesheet" href="/static/walmart-font.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --blue:   #001e60;
+      --spark:  #ffc220;
+      --green:  #2a8703;
+      --red:    #ea1100;
+      --bg:     #f0f4fb;
+      --card:   #ffffff;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --radius: 1rem;
+      --gray-light: #f1f5f9;
+      --border: #e2e8f0;
+    }
+
+    body {
+      font-family: "Bogle", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--blue);
+      color: #fff;
+      padding: 0 1.25rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.3);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: #fff; }
+    .spark-icon { width: 1.75rem; height: 1.75rem; fill: var(--spark); flex-shrink: 0; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; }
+    .brand-sub { font-size: .7rem; opacity: .75; }
+
+    .header-right { display: flex; align-items: center; gap: .75rem; }
+    .nav-btn {
+      background: rgba(255,255,255,.18);
+      border: none; color: #fff; border-radius: .5rem;
+      padding: .4rem .8rem; cursor: pointer; font-size: .8rem; font-weight: 700;
+      text-decoration: none; transition: background .15s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,.3); }
+
+    main {
+      flex: 1;
+      padding: 1rem .75rem 2rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .form-header {
+      margin-bottom: 1.5rem;
+    }
+    .page-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: .25rem;
+    }
+    .page-subtitle {
+      font-size: .85rem;
+      color: var(--muted);
+    }
+
+    /* ===== METADATA CARD ===== */
+    .meta-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .meta-card {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+    }
+    .form-label {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .form-control {
+      padding: .75rem .9rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      border-radius: .5rem;
+      outline: none;
+      transition: border-color .15s;
+      color: var(--text);
+    }
+    .form-control:focus {
+      border-color: var(--blue);
+    }
+
+    /* ===== CATEGORY SECTION ===== */
+    .category-section {
+      margin-bottom: 2rem;
+    }
+    .category-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--blue);
+      margin-bottom: .75rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: .35rem;
+    }
+
+    /* ===== QUESTION CARD ===== */
+    .question-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: .75rem;
+      border-left: 4px solid var(--muted);
+      transition: border-left-color .2s;
+    }
+    .question-card.active-yes { border-left-color: var(--green); }
+    .question-card.active-no { border-left-color: var(--red); }
+    .question-card.active-na { border-left-color: #cbd5e1; }
+
+    .question-text {
+      font-size: .95rem;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: .85rem;
+      color: var(--text);
+    }
+
+    /* Toggle buttons (Yes / No / NA) */
+    .btn-group {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: .75rem;
+    }
+    .btn-option {
+      flex: 1;
+      padding: .6rem;
+      font-size: .85rem;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      background: #fff;
+      border-radius: .5rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+      color: var(--muted);
+    }
+    
+    /* Yes States */
+    .btn-option-yes:hover { border-color: var(--green); color: var(--green); }
+    input[type="radio"]:checked + .btn-option-yes {
+      background: #f0fdf4;
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* No States */
+    .btn-option-no:hover { border-color: var(--red); color: var(--red); }
+    input[type="radio"]:checked + .btn-option-no {
+      background: #fef2f2;
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    /* NA States */
+    .btn-option-na:hover { border-color: #94a3b8; color: #475569; }
+    input[type="radio"]:checked + .btn-option-na {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #475569;
+    }
+
+    .radio-input {
+      display: none;
+    }
+
+    /* Comment Section under question */
+    .comment-container {
+      display: none;
+      animation: slideDown .2s ease;
+    }
+    .comment-container.show {
+      display: block;
+    }
+    .comment-input {
+      width: 100%;
+      padding: .5rem .75rem;
+      font-size: .85rem;
+      border: 1px dashed var(--border);
+      background: #fafafa;
+      border-radius: .4rem;
+      outline: none;
+      resize: vertical;
+    }
+    .comment-input:focus {
+      border-color: var(--red);
+    }
+
+    /* ===== GENERAL NOTES ===== */
+    .notes-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 2rem;
+    }
+    .notes-textarea {
+      width: 100%;
+      height: 100px;
+      padding: .75rem;
+      border: 2px solid var(--border);
+      border-radius: .5rem;
+      outline: none;
+      resize: vertical;
+      font-size: .95rem;
+      margin-top: .5rem;
+    }
+    .notes-textarea:focus {
+      border-color: var(--blue);
+    }
+
+    /* ===== SUBMIT ROW ===== */
+    .submit-row {
+      display: flex;
+      gap: .75rem;
+    }
+    .btn-cancel {
+      flex: 1;
+      padding: .9rem;
+      background: #cbd5e1;
+      color: #334155;
+      text-align: center;
+      text-decoration: none;
+      border-radius: .75rem;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: #94a3b8; }
+    
+    .btn-submit {
+      flex: 2;
+      padding: .9rem;
+      background: var(--blue);
+      color: #fff;
+      border-radius: .75rem;
+      font-weight: 800;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 83, 226, 0.3);
+    }
+    .btn-submit:hover { background: #0041b8; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="/audits" class="brand">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <img src="/static/wm_logo.png" alt="Walmart" style="height: 2.25rem; object-fit: contain;">
+        <div style="width: 1px; height: 1.5rem; background: rgba(255,255,255,0.3);"></div>
+        <img src="/static/ap_logo.png" alt="Asset Protection" style="height: 2.25rem; object-fit: contain;">
+      </div>
+      <div>
+        <p class="brand-sub">Walmart / AP Investigations</p>
+        <h1 class="brand-title">Nuevo Touring</h1>
+      </div>
+    </a>
+    <div class="header-right">
+      <a href="/audits" class="nav-btn">Cancelar</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="form-header">
+        <h2 class="page-title">Touring Fulfillment de OPD</h2>
+        <p class="page-subtitle">Completa los 22 puntos de control obligatorios durante tu recorrido por el departamento.</p>
+      </div>
+
+      <form action="/audits/new" method="POST" onsubmit="return validateForm()">
+        
+        <!-- Metadata -->
+        <div class="meta-card" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;">
+          <div class="form-group">
+            <label class="form-label" for="store_id">Numero de Tienda</label>
+            <input 
+              class="form-control" 
+              type="number" 
+              id="store_id" 
+              name="store_id" 
+              placeholder="Ej. 1234" 
+              required 
+              min="1" 
+              max="9999"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="week_number">Semana Fiscal</label>
+            <input 
+              class="form-control" 
+              type="text" 
+              id="week_number" 
+              name="week_number" 
+              placeholder="Ej. WK 20" 
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="discussed_with">Discutida con Gerencia</label>
+            <select class="form-control" id="discussed_with" name="discussed_with" required style="background: white; cursor: pointer;">
+              <option value="" disabled selected>-- Selecciona un Gerente --</option>
+              <option value="Victor Gracia (Store Manager)">Victor Gracia (Store Manager)</option>
+              <option value="Alberto Alvarez (Co-Manager)">Alberto Alvarez (Co-Manager)</option>
+              <option value="Joel Bou (Co-Manager)">Joel Bou (Co-Manager)</option>
+              <option value="No fue discutida con un Gerente">No fue discutida con un Gerente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="auditor_name">Auditor AP</label>
+            <input 
+              class="form-control" 
+              type="text" 
+              id="auditor_name" 
+              name="auditor_name" 
+              placeholder="Ej. Hector" 
+              value="Hector"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Dynamic Questions by Category -->
+        {% set ns = namespace(q_idx=0) %}
+        {% for category, questions in schema.items() %}
+          <div class="category-section">
+            <h3 class="category-title">{{ category }}</h3>
+            
+            {% for q in questions %}
+              {% set ns.q_idx = ns.q_idx + 1 %}
+              {% set q_idx = ns.q_idx %}
+              <div class="question-card" id="card-{{ q_idx }}">
+                <p class="question-text">{{ q_idx }}. {{ q }}</p>
+                
+                <!-- Radio fields passing values -->
+                <input type="hidden" name="cat_{{ q_idx }}" value="{{ category }}">
+                <input type="hidden" name="question_{{ q_idx }}" value="{{ q }}">
+                
+                <div class="btn-group">
+                  <label>
+                    <input 
+                      type="radio" 
+                      name="status_{{ q_idx }}" 
+                      value="yes" 
+                      class="radio-input"
+                      onclick="handleOptionChange({{ q_idx }}, 'yes')"
+                      required
+                    >
+                    <span class="btn-option btn-option-yes">CUMPLE</span>
+                  </label>
+                  
+                  <label>
+                    <input 
+                      type="radio" 
+                      name="status_{{ q_idx }}" 
+                      value="no" 
+                      class="radio-input"
+                      onclick="handleOptionChange({{ q_idx }}, 'no')"
+                    >
+                    <span class="btn-option btn-option-no">NO CUMPLE</span>
+                  </label>
+                  
+                  <label>
+                    <input 
+                      type="radio" 
+                      name="status_{{ q_idx }}" 
+                      value="na" 
+                      class="radio-input"
+                      onclick="handleOptionChange({{ q_idx }}, 'na')"
+                    >
+                    <span class="btn-option btn-option-na">N/A</span>
+                  </label>
+                </div>
+
+                <!-- Comment Input (revealed for 'no' as suggestion, but always useful) -->
+                <div class="comment-container" id="comment-container-{{ q_idx }}">
+                  <textarea 
+                    class="comment-input" 
+                    id="comment-{{ q_idx }}" 
+                    name="comment_{{ q_idx }}" 
+                    placeholder="Describe el hallazgo (ej. carros obstruyendo la puerta, falta extintor...)"
+                  ></textarea>
+                </div>
+              </div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+
+        <!-- General Notes -->
+        <div class="notes-card">
+          <label class="form-label">Comentarios Generales / Plan de Accion</label>
+          <textarea 
+            class="notes-textarea" 
+            name="notes" 
+            placeholder="Añade notas generales sobre el estado del departamento, compromisos con el Coach o plan de accion correctivo..."
+          ></textarea>
+        </div>
+
+        <!-- Action Row -->
+        <div class="submit-row">
+          <a href="/audits" class="btn-cancel">Cancelar</a>
+          <button type="submit" class="btn-submit">Guardar Auditoría</button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // Client-side interactions
+    function handleOptionChange(qIdx, option) {
+      const card = document.getElementById(`card-${qIdx}`);
+      const commentContainer = document.getElementById(`comment-container-${qIdx}`);
+      const commentInput = document.getElementById(`comment-${qIdx}`);
+      
+      // Reset card border classes
+      card.classList.remove('active-yes', 'active-no', 'active-na');
+      
+      if (option === 'yes') {
+        card.classList.add('active-yes');
+        commentContainer.classList.remove('show');
+      } else if (option === 'no') {
+        card.classList.add('active-no');
+        commentContainer.classList.add('show');
+        commentInput.focus();
+      } else {
+        card.classList.add('active-na');
+        commentContainer.classList.remove('show');
+      }
+    }
+
+    function validateForm() {
+      // Form validation helper
+      return true;
+    }
+  </script>
+
+</body>
+</html>

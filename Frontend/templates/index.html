@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#001e60" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="OPD Orders" />
+  <title>OPD Orders — Walmart</title>
+  <link rel="manifest" href="/static/manifest.json?v=5" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
+  <link rel="stylesheet" href="/static/walmart-font.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:   #001e60;
+      --spark:  #ffc220;
+      --green:  #2a8703;
+      --red:    #ea1100;
+      --bg:     #f0f4fb;
+      --card:   #ffffff;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --radius: 1rem;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: "Bogle", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: var(--blue);
+      color: #fff;
+      padding: 0 1.25rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.3);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; }
+    .spark-icon { width: 1.75rem; height: 1.75rem; fill: var(--spark); flex-shrink: 0; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; }
+    .brand-sub   { font-size: .7rem; opacity: .75; display: none; }
+    @media(min-width:640px) { .brand-sub { display: block; } }
+
+    .header-right { display: flex; align-items: center; gap: .75rem; }
+    .live-badge {
+      display: flex; align-items: center; gap: .35rem;
+      background: rgba(255,255,255,.18);
+      border-radius: 999px; padding: .25rem .65rem;
+      font-size: .7rem; font-weight: 700;
+    }
+    .pulse {
+      width: .5rem; height: .5rem;
+      background: var(--spark); border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100%{ opacity:1; transform:scale(1); }
+      50%    { opacity:.5; transform:scale(1.4); }
+    }
+
+    /* fullscreen button */
+    .fs-btn {
+      background: rgba(255,255,255,.18); border: none;
+      color: #fff; border-radius: .5rem;
+      padding: .3rem .55rem; cursor: pointer; font-size: .8rem;
+    }
+    .fs-btn:hover { background: rgba(255,255,255,.3); }
+
+    /* install button in header */
+    .install-header-btn {
+      background: var(--spark); color: #1e293b;
+      border: none; border-radius: .5rem;
+      padding: .3rem .7rem; cursor: pointer;
+      font-size: .75rem; font-weight: 800;
+      display: flex; align-items: center; gap: .3rem;
+      white-space: nowrap;
+    }
+    .install-header-btn:hover { background: #e6ae00; }
+
+    /* ===== STORE SELECT SCREEN ===== */
+    #store-screen {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--blue);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    #store-screen.hidden { display: none; }
+    .store-logo {
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: 2.5rem;
+    }
+    .store-logo svg { width: 3rem; height: 3rem; fill: var(--spark); }
+    .store-logo-txt { color: #fff; }
+    .store-logo-txt p { font-size: .85rem; opacity: .75; }
+    .store-logo-txt h1 { font-size: 1.6rem; font-weight: 900; }
+    .store-card {
+      background: #fff; border-radius: 1.5rem;
+      padding: 2rem 1.75rem;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    }
+    .store-card h2 {
+      font-size: 1.1rem; font-weight: 800;
+      color: var(--text); margin-bottom: .35rem;
+    }
+    .store-card p {
+      font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem;
+    }
+    .store-input-wrap { position: relative; margin-bottom: 1rem; }
+    .store-prefix {
+      position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
+      font-size: 1.2rem; font-weight: 800; color: var(--muted);
+      pointer-events: none;
+    }
+    #store-input {
+      width: 100%;
+      padding: .85rem .9rem .85rem 2.2rem;
+      font-size: 1.6rem; font-weight: 900;
+      border: 2px solid #e2e8f0; border-radius: .75rem;
+      letter-spacing: .15em; color: var(--text);
+      outline: none; transition: border-color .15s;
+    }
+    #store-input:focus { border-color: var(--blue); }
+    #store-input.error { border-color: var(--red); }
+    #store-error {
+      display: none; color: var(--red);
+      font-size: .8rem; font-weight: 600; margin-bottom: .75rem;
+    }
+    #store-error.show { display: block; }
+    .store-submit {
+      width: 100%; padding: .85rem;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: .75rem;
+      font-size: 1rem; font-weight: 800;
+      cursor: pointer; transition: background .15s;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+    }
+    .store-submit:hover { background: #0041b8; }
+    .store-submit:disabled { background: #93c5fd; cursor: not-allowed; }
+    .store-demo {
+      margin-top: 1.25rem; text-align: center;
+      font-size: .75rem; color: var(--muted);
+    }
+    .store-demo span {
+      color: var(--blue); font-weight: 700; cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* header store badge */
+    .store-badge {
+      background: rgba(255,255,255,.18);
+      border-radius: .5rem; padding: .25rem .55rem;
+      font-size: .75rem; font-weight: 700; color: #fff;
+      display: flex; align-items: center; gap: .35rem;
+      cursor: pointer;
+    }
+    .store-badge:hover { background: rgba(255,255,255,.28); }
+    .store-badge-lbl { font-size: .6rem; opacity: .75; }
+    .store-badge-num  { font-size: .85rem; }
+
+
+    #install-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 500;
+      align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    #install-modal.show { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 1.25rem;
+      max-width: 440px; width: 100%;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+      animation: popIn .25s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(.94); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 800; color: var(--blue); }
+    .modal-close {
+      background: #f1f5f9; border: none; border-radius: .5rem;
+      width: 2rem; height: 2rem; cursor: pointer;
+      font-size: 1rem; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .browser-tabs {
+      display: flex; gap: .4rem; margin-bottom: 1rem;
+    }
+    .tab-btn {
+      flex: 1; padding: .4rem; border-radius: .5rem; border: 2px solid #e2e8f0;
+      background: #f8fafc; cursor: pointer; font-size: .75rem; font-weight: 700;
+      color: var(--muted); transition: all .15s;
+    }
+    .tab-btn.active {
+      border-color: var(--blue); background: #eff6ff; color: var(--blue);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .steps { list-style: none; }
+    .steps li {
+      display: flex; gap: .75rem; align-items: flex-start;
+      padding: .6rem 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .steps li:last-child { border-bottom: none; }
+    .step-num {
+      background: var(--blue); color: #fff;
+      border-radius: 50%; width: 1.5rem; height: 1.5rem; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 800;
+    }
+    .step-txt { font-size: .85rem; color: var(--text); line-height: 1.4; }
+    .step-key {
+      display: inline-block; background: #f1f5f9; border: 1px solid #e2e8f0;
+      border-radius: .3rem; padding: .05rem .35rem; font-size: .75rem;
+      font-family: monospace; font-weight: 700; color: var(--text);
+    }
+    .modal-note {
+      margin-top: .85rem; padding: .6rem .75rem;
+      background: #eff6ff; border-radius: .5rem;
+      font-size: .75rem; color: var(--blue);
+    }
+    .modal-footer {
+      margin-top: 1rem; display: flex; gap: .5rem; justify-content: flex-end;
+    }
+    .btn-skip {
+      background: #f1f5f9; border: none; border-radius: .5rem;
+      padding: .45rem .9rem; cursor: pointer; font-size: .8rem; color: var(--muted);
+    }
+    .btn-got-it {
+      background: var(--blue); color: #fff; border: none; border-radius: .5rem;
+      padding: .45rem 1rem; cursor: pointer; font-size: .8rem; font-weight: 700;
+    }
+
+    /* ===== NOTIFICATION BANNER ===== */
+    #notif-banner {
+      display: none;
+      position: fixed; top: 3.6rem; left: 50%; transform: translateX(-50%);
+      background: var(--green); color: #fff;
+      font-weight: 700; font-size: .9rem;
+      padding: .55rem 1.25rem; border-radius: 999px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.25);
+      z-index: 200; white-space: nowrap;
+      animation: slideDown .3s ease;
+    }
+    @keyframes slideDown {
+      from { top: 3rem; opacity: 0; }
+      to   { top: 3.6rem; opacity: 1; }
+    }
+
+    /* ===== MAIN ===== */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem .75rem 1.5rem;
+    }
+    .dashboard { max-width: 1200px; margin: 0 auto; }
+
+    /* ===== STATS ===== */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .6rem;
+      margin-bottom: 1rem;
+    }
+    @media(min-width:640px) {
+      .stats { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat-card {
+      background: var(--card); border-radius: var(--radius);
+      padding: .85rem .5rem; text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .stat-num { font-size: 2rem; font-weight: 900; line-height: 1; }
+    .stat-lbl { font-size: .65rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-top: .2rem; }
+    @media(min-width:1024px) { .stat-num { font-size: 2.5rem; } }
+
+    .c-blue  { color: var(--blue); }
+    .c-red   { color: var(--red); }
+    .c-green { color: var(--green); }
+    .c-spark { color: #d97706; }
+    .c-gray  { color: #cbd5e1; }
+
+    /* ===== ORDERS GRID ===== */
+    .orders-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media(min-width:768px) {
+      .orders-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .col-header {
+      font-size: .7rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: .6rem; padding-left: .25rem;
+    }
+
+    /* ===== ORDER CARD ===== */
+    .order-card {
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: 0 1px 5px rgba(0,0,0,.09);
+      margin-bottom: .75rem; overflow: hidden;
+      border-left: 5px solid var(--blue);
+      transition: transform .15s;
+    }
+    .order-card:hover { transform: translateY(-2px); }
+    .order-card.urgente { border-color: #f59e0b; }
+    .order-card.critico { border-color: var(--red); }
+    .order-card.new-order { animation: newPop .5s ease; }
+    @keyframes newPop {
+      0%   { transform: scale(.97); box-shadow: 0 0 0 3px var(--green); }
+      60%  { transform: scale(1.01); }
+      100% { transform: scale(1); }
+    }
+
+    .card-body { padding: .875rem 1rem; }
+    .card-top  { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .5rem; }
+    .order-id  { font-size: .65rem; font-weight: 700; color: var(--muted); letter-spacing: .05em; }
+    .order-name{ font-size: 1rem; font-weight: 700; }
+    @media(min-width:1024px) { .order-name { font-size: 1.1rem; } }
+
+    .badge { font-size: .65rem; font-weight: 700; padding: .2rem .55rem; border-radius: 999px; white-space: nowrap; }
+    .badge-blue   { background: #dbeafe; color: var(--blue); }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-green  { background: var(--green); color: #fff; }
+
+    .products { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: .6rem; }
+    .product-chip {
+      background: #f1f5f9; color: var(--muted);
+      font-size: .7rem; border-radius: 999px; padding: .15rem .5rem;
+    }
+    @media(min-width:1024px) { .product-chip { font-size: .75rem; } }
+
+    .card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .wait-row    { display: flex; align-items: center; gap: .3rem; }
+    .wait-icon   { width: 1rem; height: 1rem; }
+    .wait-txt    { font-size: .8rem; font-weight: 600; }
+    .normal-txt  { color: var(--muted); }
+    .urgente-txt { color: #b45309; }
+    .critico-txt { color: var(--red); }
+    .priority-tag{ font-size: .7rem; font-weight: 800; color: var(--red); animation: pulse 1.2s infinite; }
+
+    /* ===== READY CARD ===== */
+    .ready-card {
+      background: #f0fdf4; border: 1px solid #86efac;
+      border-radius: var(--radius); padding: .875rem 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .65rem;
+    }
+    .ready-name { font-weight: 600; }
+    .ready-sub  { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
+
+    /* ===== EMPTY ===== */
+    .empty-state {
+      background: var(--card); border-radius: var(--radius);
+      padding: 2.5rem 1rem; text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .empty-icon  { font-size: 2.5rem; margin-bottom: .5rem; }
+    .empty-title { font-size: 1.1rem; font-weight: 700; color: var(--green); }
+    .empty-sub   { font-size: .8rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ===== TIMESTAMP ===== */
+    .timestamp { text-align: center; font-size: .7rem; color: #cbd5e1; margin-top: .75rem; }
+
+    /* ===== SKELETON ===== */
+    .skeleton { background: linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size:200%; border-radius:.5rem; animation:shimmer 1.5s infinite; }
+    @keyframes shimmer { 0%{background-position:200%}100%{background-position:-200%} }
+    .sk-card { background:var(--card); border-radius:var(--radius); padding:1rem; margin-bottom:.75rem; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .sk-line  { height:.875rem; margin-bottom:.5rem; }
+
+    /* ===== INSTALL BANNER ===== */
+    #install-banner {
+      display: none; position: fixed;
+      bottom: 1rem; left: .75rem; right: .75rem;
+      max-width: 440px; margin: 0 auto;
+      background: var(--blue); color: #fff;
+      border-radius: var(--radius); padding: .875rem 1rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3);
+      align-items: center; justify-content: space-between; z-index: 100;
+    }
+    #install-banner.show { display: flex; }
+    .install-info p:first-child { font-size: .85rem; font-weight: 700; }
+    .install-info p:last-child  { font-size: .7rem; opacity: .8; }
+    .install-btn { background: var(--spark); color: #1e293b; font-weight: 800; font-size: .8rem; border: none; border-radius: .5rem; padding: .4rem .75rem; cursor: pointer; }
+    .dismiss-btn { background: none; border: none; color: rgba(255,255,255,.7); font-size: 1.1rem; cursor: pointer; margin-left: .4rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Pantalla de seleccion de tienda -->
+  <div id="store-screen">
+    <div class="store-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74z"/></svg>
+      <div class="store-logo-txt">
+        <p>Walmart</p>
+        <h1>OPD Orders</h1>
+      </div>
+    </div>
+
+    <div class="store-card">
+      <h2>Ingresa tu tienda</h2>
+      <p>Introduce el numero de tu tienda Walmart para ver las ordenes de OPD en tiempo real.</p>
+
+      <form onsubmit="submitStore(event)">
+        <div class="store-input-wrap">
+          <span class="store-prefix">#</span>
+          <input
+            id="store-input"
+            type="tel"
+            inputmode="numeric"
+            maxlength="4"
+            placeholder="0000"
+            autocomplete="off"
+            autofocus
+          />
+        </div>
+        <div id="store-error">Numero de tienda invalido. Ingresa entre 1 y 9999.</div>
+        <button class="store-submit" type="submit" id="store-btn">
+          <span>Entrar al Dashboard</span>
+          <span>&#8594;</span>
+        </button>
+      </form>
+
+      <p class="store-demo">
+        Datos de prueba: <span onclick="fillDemo('1234')">Tienda 1234</span>
+        &nbsp;|&nbsp; <span onclick="fillDemo('5678')">Tienda 5678</span>
+      </p>
+    </div>
+  </div>
+
+  <header>
+    <div class="brand">
+      <svg class="spark-icon" viewBox="0 0 24 24">
+        <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74z"/>
+      </svg>
+      <div>
+        <p class="brand-sub">Walmart / OPD</p>
+        <h1 class="brand-title">Ordenes Pendientes</h1>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <span class="pulse"></span>EN VIVO
+      </div>
+      <div class="store-badge" onclick="changeStore()" title="Cambiar tienda">
+        <div>
+          <p class="store-badge-lbl">Tienda</p>
+          <p class="store-badge-num" id="header-store-num">#----</p>
+        </div>
+        <span style="opacity:.6">&#8593;</span>
+      </div>
+      <a href="/" class="install-header-btn" style="text-decoration:none; background:var(--spark); color:#1e293b;" title="Volver a la Página Principal">
+         Volver a la Pagina Principal
+      </a>
+      <button class="install-header-btn" onclick="openInstallModal()" title="Instalar app">
+         Instalar App
+      </button>
+      <button class="fs-btn" onclick="toggleFullscreen()" title="Pantalla completa">&#x26F6;</button>
+    </div>
+  </header>
+
+  <!-- Notificacion de nueva orden -->
+  <div id="notif-banner">Nueva orden llegando!</div>
+
+  <main>
+    <div class="dashboard">
+      <div id="orders-container">
+        <!-- Skeleton loader -->
+        <div class="stats">
+          {% for _ in range(4) %}
+          <div class="stat-card">
+            <div class="skeleton sk-line" style="width:50%;margin:0 auto 6px;height:2rem"></div>
+            <div class="skeleton sk-line" style="width:70%;margin:0 auto;height:.65rem"></div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="orders-grid">
+          <div>
+            {% for _ in range(3) %}
+            <div class="sk-card">
+              <div class="skeleton sk-line" style="width:35%"></div>
+              <div class="skeleton sk-line" style="width:65%"></div>
+              <div class="skeleton sk-line" style="width:50%;height:.65rem"></div>
+            </div>
+            {% endfor %}
+          </div>
+          <div>
+            {% for _ in range(2) %}
+            <div class="sk-card">
+              <div class="skeleton sk-line" style="width:35%"></div>
+              <div class="skeleton sk-line" style="width:65%"></div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal de instalacion -->
+  <div id="install-modal" onclick="closeOnBackdrop(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Instalar OPD Orders</span>
+        <button class="modal-close" onclick="closeInstallModal()">&#x2715;</button>
+      </div>
+
+      <!-- Tabs de browser -->
+      <div class="browser-tabs">
+        <button class="tab-btn" id="tab-igel"   onclick="switchTab('igel')">IGEL / Chromium</button>
+        <button class="tab-btn" id="tab-edge"   onclick="switchTab('edge')">Microsoft Edge</button>
+        <button class="tab-btn" id="tab-chrome" onclick="switchTab('chrome')">Google Chrome</button>
+        <button class="tab-btn" id="tab-auto"   onclick="switchTab('auto')">Automatico</button>
+      </div>
+
+      <!-- IGEL Workspace -->
+      <div class="tab-panel" id="panel-igel">
+        <div class="modal-note" style="margin-bottom:.85rem;background:#fef9c3;color:#92400e">
+          IGEL es una thin client — no permite instalar apps localmente. La mejor experiencia es usar la app directamente en el browser.
+        </div>
+        <ol class="steps">
+          <li><span class="step-num">1</span><span class="step-txt">Abre Chromium en tu IGEL y navega a la URL de OPD Orders</span></li>
+          <li><span class="step-num">2</span><span class="step-txt">Presiona <span class="step-key">Ctrl</span> + <span class="step-key">D</span> para guardarla en favoritos con el nombre <strong>OPD Orders</strong></span></li>
+          <li><span class="step-num">3</span><span class="step-txt">Para pantalla completa en monitor presiona <span class="step-key">F11</span></span></li>
+          <li><span class="step-num">4</span><span class="step-txt"><strong>Pide a IT (IGEL Admin)</strong> que configure la URL como pagina de inicio en el perfil de Chromium — asi abre sola al encender la computadora</span></li>
+        </ol>
+        <div class="modal-note">Con el deploy a AI Innovation Lab (HTTPS), Chromium en IGEL puede instalar la app como PWA desde el menu de Chromium &rarr; <strong>Mas herramientas</strong> &rarr; <strong>Crear acceso directo</strong>.</div>
+      </div>
+
+      <!-- Edge -->
+      <div class="tab-panel" id="panel-edge">
+        <ol class="steps">
+          <li><span class="step-num">1</span><span class="step-txt">Abre el menu <span class="step-key">...</span> (tres puntos) en la esquina superior derecha de Edge</span></li>
+          <li><span class="step-num">2</span><span class="step-txt">Selecciona <strong>Aplicaciones</strong></span></li>
+          <li><span class="step-num">3</span><span class="step-txt">Haz clic en <strong>Instalar este sitio como una aplicacion</strong></span></li>
+          <li><span class="step-num">4</span><span class="step-txt">Confirma haciendo clic en <strong>Instalar</strong> en el dialogo que aparece</span></li>
+          <li><span class="step-num">5</span><span class="step-txt">El icono de OPD Orders aparecera en tu escritorio y en el menu de inicio</span></li>
+        </ol>
+        <div class="modal-note">Tambien puedes buscar el icono de instalacion en la barra de direcciones de Edge (parece una computadora con un simbolo +)</div>
+      </div>
+
+      <!-- Chrome -->
+      <div class="tab-panel" id="panel-chrome">
+        <ol class="steps">
+          <li><span class="step-num">1</span><span class="step-txt">Busca el icono de instalacion en la barra de direcciones (computadora con simbolo <strong>+</strong>)</span></li>
+          <li><span class="step-num">2</span><span class="step-txt">Si no lo ves: abre el menu <span class="step-key">...</span> (tres puntos) arriba a la derecha</span></li>
+          <li><span class="step-num">3</span><span class="step-txt">Selecciona <strong>Guardar y compartir</strong> &rarr; <strong>Crear acceso directo</strong></span></li>
+          <li><span class="step-num">4</span><span class="step-txt">Marca la casilla <strong>Abrir como ventana</strong> y haz clic en <strong>Crear</strong></span></li>
+          <li><span class="step-num">5</span><span class="step-txt">El icono aparecera en tu escritorio listo para usar</span></li>
+        </ol>
+        <div class="modal-note">Chrome requiere HTTPS para el prompt automatico. Una vez deployado a AI Innovation Lab funcionara automaticamente.</div>
+      </div>
+
+      <!-- Auto (beforeinstallprompt) -->
+      <div class="tab-panel" id="panel-auto">
+        <div style="text-align:center;padding:1.5rem 0">
+          <div style="font-size:2.5rem;margin-bottom:.75rem">&#8659;</div>
+          <p style="font-weight:700;font-size:1rem;color:var(--blue);margin-bottom:.5rem">Instalacion automatica disponible</p>
+          <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Tu navegador soporta instalacion con un solo clic.</p>
+          <button onclick="installPWA()" style="background:var(--blue);color:#fff;border:none;border-radius:.6rem;padding:.6rem 1.5rem;font-size:.9rem;font-weight:700;cursor:pointer">Instalar ahora</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-skip" onclick="skipInstall()">No mostrar de nuevo</button>
+        <button class="btn-got-it" onclick="closeInstallModal()">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="install-banner">
+    <div class="install-info">
+      <p>Instalar como app</p>
+      <p>Agrega OPD Orders a pantalla de inicio</p>
+    </div>
+    <div style="display:flex;align-items:center">
+      <button class="install-btn" onclick="installPWA()">Instalar</button>
+      <button class="dismiss-btn" onclick="dismissBanner()">x</button>
+    </div>
+  </div>
+
+  <script>
+    // Desinstalación absoluta del Service Worker para evitar cache corrupto de CCTV/Auditorías
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let r of registrations) {
+          r.unregister().then(() => console.log('SW Desinstalado desde Index'));
+        }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(keys) {
+        for (let k of keys) {
+          caches.delete(k);
+        }
+      });
+    }
+
+    // ---- Seleccion de tienda ----
+    let currentStore = null;
+
+    function fillDemo(num) {
+      document.getElementById('store-input').value = num;
+      document.getElementById('store-input').focus();
+    }
+
+    async function submitStore(e) {
+      e.preventDefault();
+      const input = document.getElementById('store-input');
+      const btn   = document.getElementById('store-btn');
+      const err   = document.getElementById('store-error');
+      const raw   = input.value.trim();
+
+      input.classList.remove('error');
+      err.classList.remove('show');
+      btn.disabled = true;
+      btn.innerHTML = '<span>Verificando...</span>';
+
+      try {
+        const res  = await fetch('/validate-store?store=' + encodeURIComponent(raw));
+        const data = await res.json();
+
+        if (data.valid) {
+          enterStore(data.store);
+        } else {
+          input.classList.add('error');
+          err.classList.add('show');
+        }
+      } catch {
+        input.classList.add('error');
+        err.textContent = 'Error de conexion. Verifica la red.';
+        err.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Entrar al Dashboard</span><span>&#8594;</span>';
+      }
+    }
+
+    function enterStore(storeNum) {
+      currentStore = storeNum;
+      sessionStorage.setItem('opd-store', storeNum);
+      document.getElementById('store-screen').classList.add('hidden');
+      document.getElementById('header-store-num').textContent = '#' + storeNum;
+      firstLoad = true;
+      knownIds  = new Set();
+      fetchOrders();
+      if (!sessionStorage.getItem('opd-install-skip')) {
+        setTimeout(openInstallModal, 3000);
+      }
+    }
+
+    function changeStore() {
+      sessionStorage.removeItem('opd-store');
+      currentStore = null;
+      document.getElementById('store-screen').classList.remove('hidden');
+      document.getElementById('store-input').value = '';
+      document.getElementById('store-input').focus();
+      document.getElementById('orders-container').innerHTML = '';
+    }
+
+    // ---- Notificacion de sonido ----
+    let audioCtx = null;
+
+    function playChime() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99, 1046.5]; // Do Mi Sol Do (acorde mayor)
+        notes.forEach((freq, i) => {
+          const osc  = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const t = audioCtx.currentTime + i * 0.12;
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.25, t + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+          osc.start(t);
+          osc.stop(t + 0.5);
+        });
+      } catch(e) { console.warn('Audio no disponible:', e); }
+    }
+
+    // ---- Banner de notificacion visual ----
+    let notifTimer = null;
+
+    function showNotif(count) {
+      const banner = document.getElementById('notif-banner');
+      banner.textContent = count === 1
+        ? '1 orden nueva llegando!'
+        : count + ' ordenes nuevas llegando!';
+      banner.style.display = 'block';
+      if (notifTimer) clearTimeout(notifTimer);
+      notifTimer = setTimeout(() => { banner.style.display = 'none'; }, 4000);
+    }
+
+    // ---- Polling de ordenes ----
+    let knownIds = new Set();
+    let firstLoad = true;
+
+    async function fetchOrders() {
+      if (!currentStore) return; // no hacer nada si no hay tienda seleccionada
+      try {
+        const res = await fetch('/orders?store=' + encodeURIComponent(currentStore));
+        if (!res.ok) return;
+        const html = await res.text();
+
+        // Extraer IDs de ordenes del atributo data
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const idsAttr = tmp.querySelector('[data-order-ids]');
+        const newIds  = idsAttr
+          ? new Set(idsAttr.dataset.orderIds.split(',').filter(Boolean))
+          : new Set();
+
+        // Detectar ordenes nuevas (ignorar primera carga)
+        if (!firstLoad && newIds.size > 0) {
+          const llegadas = [...newIds].filter(id => !knownIds.has(id));
+          if (llegadas.length > 0) {
+            playChime();
+            showNotif(llegadas.length);
+          }
+        }
+
+        knownIds  = newIds;
+        firstLoad = false;
+
+        document.getElementById('orders-container').innerHTML = html;
+      } catch(e) {
+        console.warn('Error cargando ordenes:', e);
+      }
+    }
+
+    // Activar AudioContext en primer click (politica de browsers)
+    document.addEventListener('click', () => {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }, { once: true });
+
+    // Arrancar: recuperar tienda de session o mostrar pantalla de seleccion
+    (function init() {
+      const saved = sessionStorage.getItem('opd-store');
+      if (saved) { enterStore(saved); }
+      // Sin tienda guardada: pantalla de seleccion visible por defecto
+    })();
+
+    setInterval(fetchOrders, 5000);
+
+    // ---- Pantalla completa ----
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // ---- PWA install ----
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Si hay prompt nativo disponible, lo usamos directo
+      switchTab('auto');
+    });
+
+    function detectBrowser() {
+      const ua  = navigator.userAgent;
+      const isLinux  = ua.includes('Linux') && !ua.includes('Android');
+      const isEdge   = ua.includes('Edg/');
+      const isChrome = ua.includes('Chrome/');
+      if (isLinux && isChrome && !isEdge) return 'igel';  // IGEL Workspace = Linux + Chromium
+      if (isEdge)   return 'edge';
+      if (isChrome) return 'chrome';
+      return 'igel'; // fallback seguro para thin clients
+    }
+
+    function openInstallModal() {
+      const modal = document.getElementById('install-modal');
+      modal.classList.add('show');
+      // Si hay prompt automatico mostramos esa tab, si no detectamos el browser
+      if (deferredPrompt) {
+        switchTab('auto');
+      } else {
+        switchTab(detectBrowser());
+      }
+    }
+
+    function closeInstallModal() {
+      document.getElementById('install-modal').classList.remove('show');
+    }
+
+    function closeOnBackdrop(e) {
+      if (e.target.id === 'install-modal') closeInstallModal();
+    }
+
+    function skipInstall() {
+      sessionStorage.setItem('opd-install-skip', '1'); // sessionStorage: compatible con IGEL
+      closeInstallModal();
+    }
+
+    function switchTab(browser) {
+      ['igel','edge','chrome','auto'].forEach(b => {
+        document.getElementById('tab-'   + b).classList.toggle('active', b === browser);
+        document.getElementById('panel-' + b).classList.toggle('active', b === browser);
+      });
+    }
+
+    function installPWA() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => { deferredPrompt = null; closeInstallModal(); });
+    }
+
+    function dismissBanner() {
+      document.getElementById('install-banner').classList.remove('show');
+    }
+
+    // Mostrar modal automaticamente la primera vez (despues de 2 seg)
+    window.addEventListener('load', () => {
+      if (!sessionStorage.getItem('opd-install-skip')) { // sessionStorage: IGEL compatible
+        setTimeout(openInstallModal, 2000);
+      }
+    });
+  </script>
+</body>
+</html>

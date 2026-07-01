@@ -1,0 +1,24 @@
+{
+  "name": "Portal de Auditorias de AP - Walmart",
+  "short_name": "Auditorias AP",
+  "description": "Portal de auditorias y Touring Fulfillment OPD de Asset Protection",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#001e60",
+  "theme_color": "#001e60",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icon-192-ap.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-512-ap.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

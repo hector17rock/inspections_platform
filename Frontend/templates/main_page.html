@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#001e60">
+  <title>Portal de Auditorias de AP - Walmart</title>
+  <link rel="manifest" href="/static/manifest.json?v=5">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <script>
+    // Limpieza forzada de Service Workers agresivos para evitar cache de datos de AP
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let r of registrations) {
+          r.unregister().then(() => console.log('SW Desinstalado'));
+        }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(keys) {
+        for (let k of keys) {
+          caches.delete(k);
+        }
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="/static/walmart-font.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --blue:   #001e60;
+      --spark:  #ffc220;
+      --green:  #2a8703;
+      --red:    #ea1100;
+      --bg:     #f0f4fb;
+      --card:   #ffffff;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --radius: 1.25rem;
+      --border: #e2e8f0;
+    }
+
+    body {
+      font-family: "Bogle", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--blue);
+      color: #fff;
+      padding: 0 1.25rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.3);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: #fff; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; }
+    .brand-sub { font-size: .7rem; opacity: .75; }
+
+    main {
+      flex: 1;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .welcome-section {
+      text-align: center;
+      max-width: 700px;
+      margin-bottom: 2.5rem;
+    }
+    .welcome-title {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--blue);
+      margin-bottom: .5rem;
+    }
+    .welcome-subtitle {
+      font-size: .95rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    /* ===== PORTAL GRID ===== */
+    .portal-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 900px;
+    }
+    @media (min-width: 640px) {
+      .portal-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* ===== TOOL CARD ===== */
+    .tool-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 15px rgba(0,0,0,.06);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-top: 5px solid var(--muted);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .tool-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,.1);
+    }
+    .tool-card.active-card { border-top-color: var(--blue); }
+    .tool-card.locked-card { opacity: .75; border-top-color: #cbd5e1; background: #fafafc; }
+
+    .tool-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1rem;
+    }
+    .tool-icon-wrap {
+      background: #eff6ff;
+      border-radius: .75rem;
+      width: 3rem;
+      height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .tool-card.locked-card .tool-icon-wrap {
+      background: #f1f5f9;
+    }
+    .tool-icon {
+      font-size: 1.5rem;
+    }
+
+    .tool-title-grp {
+      display: flex;
+      flex-direction: column;
+    }
+    .tool-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .tool-badge {
+      font-size: .65rem;
+      font-weight: 800;
+      padding: .15rem .5rem;
+      border-radius: 999px;
+      align-self: flex-start;
+      margin-top: .15rem;
+    }
+    .badge-active { background: #e8f5e9; color: var(--green); }
+    .badge-locked { background: #f1f5f9; color: var(--muted); }
+
+    .tool-desc {
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      flex: 1;
+    }
+
+    .btn-action {
+      display: block;
+      width: 100%;
+      padding: .75rem;
+      border-radius: .75rem;
+      text-align: center;
+      font-weight: 800;
+      font-size: .95rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-action-active {
+      background: var(--blue);
+      color: #fff;
+    }
+    .btn-action-active:hover {
+      background: #0041b8;
+    }
+    .btn-action-locked {
+      background: #cbd5e1;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: .75rem;
+      color: var(--muted);
+      border-top: 1px solid #e2e8f0;
+      background: #fff;
+      margin-top: auto;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <img src="/static/wm_logo.png" alt="Walmart" style="height: 2.25rem; object-fit: contain;">
+        <div style="width: 1px; height: 1.5rem; background: rgba(255,255,255,0.3);"></div>
+        <img src="/static/ap_logo.png" alt="Asset Protection" style="height: 2.25rem; object-fit: contain;">
+      </div>
+      <div>
+        <p class="brand-sub">Walmart / AP Investigations</p>
+        <h1 class="brand-title">Portal de Auditorias de AP</h1>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="welcome-section">
+      <h2 class="welcome-title">Bienvenido, Hector</h2>
+      <p class="welcome-subtitle">
+        Investigador de Proteccion de Activos. Gestiona, audita y monitorea los procesos operativos y de seguridad de tu tienda desde un solo lugar.
+      </p>
+    </div>
+
+    <div class="portal-grid">
+      
+      <!-- Card 1: Touring Fulfillment OPD -->
+      <div class="tool-card active-card">
+        <div>
+          <div class="tool-header">
+            <div class="tool-icon-wrap" style="background: #eff6ff; display: flex; align-items: center; justify-content: center;">
+              <!-- Walmart Pickup Bag with Spark SVG -->
+              <svg viewBox="0 0 24 24" style="width: 2rem; height: 2rem;">
+                <!-- Shopping Bag -->
+                <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h14v12z" fill="#001e60"/>
+                <!-- Centered, Symmetrical Walmart Spark inside Bag -->
+                <g transform="translate(12, 14.5)">
+                  <rect x="-1" y="-5.5" width="2" height="3.5" rx="1" fill="#ffc220" />
+                  <rect x="-1" y="-5.5" width="2" height="3.5" rx="1" fill="#ffc220" transform="rotate(60)" />
+                  <rect x="-1" y="-5.5" width="2" height="3.5" rx="1" fill="#ffc220" transform="rotate(120)" />
+                  <rect x="-1" y="-5.5" width="2" height="3.5" rx="1" fill="#ffc220" transform="rotate(180)" />
+                  <rect x="-1" y="-5.5" width="2" height="3.5" rx="1" fill="#ffc220" transform="rotate(240)" />
+                  <rect x="-1" y="-5.5" width="2" height="3.5" rx="1" fill="#ffc220" transform="rotate(300)" />
+                </g>
+              </svg>
+            </div>
+            <div class="tool-title-grp">
+              <h3 class="tool-title">Touring Fulfillment OPD</h3>
+              <span class="tool-badge badge-active">ACTIVO</span>
+            </div>
+          </div>
+          <p class="tool-desc">
+            Realiza la auditoría obligatoria de 22 puntos de control para evaluar la seguridad, procesos, controles de trastienda y cumplimiento en el espacio de OPD.
+          </p>
+        </div>
+        <a href="/audits" class="btn-action btn-action-active">Acceder a Auditorías</a>
+      </div>
+
+      <!-- Card 2: Investigación CCTV (Active) -->
+      <div class="tool-card active-card">
+        <div>
+          <div class="tool-header">
+            <div class="tool-icon-wrap" style="background: #eff6ff; display: flex; align-items: center; justify-content: center;">
+              <!-- Video Camera SVG -->
+              <svg viewBox="0 0 24 24" style="width: 2rem; height: 2rem; fill: var(--blue);">
+                <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 16H5V8h9v8z"/>
+              </svg>
+            </div>
+            <div class="tool-title-grp">
+              <h3 class="tool-title">Investigación CCTV</h3>
+              <span class="tool-badge badge-active">ACTIVO</span>
+            </div>
+          </div>
+          <p class="tool-desc">
+            Registra cronologías de hechos observados en cámaras de seguridad para investigaciones de CCTV corporativas (con o sin fotos).
+          </p>
+        </div>
+        <a href="/cctv" class="btn-action btn-action-active">Acceder a Investigaciones</a>
+      </div>
+
+      <!-- Card 3: Auditoria de Disponibilidad (Availability) -->
+      <div class="tool-card active-card">
+        <div>
+          <div class="tool-header">
+            <div class="tool-icon-wrap" style="background: #eff6ff; display: flex; align-items: center; justify-content: center;">
+              <!-- Inventory / Checklist Grid SVG -->
+              <svg viewBox="0 0 24 24" style="width: 2rem; height: 2rem; fill: var(--blue);">
+                <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2H10zm0 3h8v2H10zm0-6h8v2H10z"/>
+              </svg>
+            </div>
+            <div class="tool-title-grp">
+              <h3 class="tool-title">Auditoría de Disponibilidad</h3>
+              <span class="tool-badge badge-active">ACTIVO</span>
+            </div>
+          </div>
+          <p class="tool-desc">
+            Registra el estado de modulares preestablecidos, secuencia modular, outs y valor de PI Understated para optimizar la disponibilidad en piso de ventas.
+          </p>
+        </div>
+        <a href="/availability" class="btn-action btn-action-active">Acceder a Disponibilidad</a>
+      </div>
+
+      <!-- Card 4: Control de Llaves y Alpha (Future) -->
+      <div class="tool-card locked-card">
+        <div>
+          <div class="tool-header">
+            <div class="tool-icon-wrap" style="background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+              <!-- Locked Padlock SVG -->
+              <svg viewBox="0 0 24 24" style="width: 1.5rem; height: 1.5rem; fill: #94a3b8;">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+              </svg>
+            </div>
+            <div class="tool-title-grp">
+              <h3 class="tool-title">Control de Llaves y Alpha Keys</h3>
+              <span class="tool-badge badge-locked">PRÓXIMAMENTE</span>
+            </div>
+          </div>
+          <p class="tool-desc">
+            Monitoreo, registro de firmas y auditoria de asignacion diaria de llaves de alta seguridad, llaves Alpha y control de vitrinas cerradas.
+          </p>
+        </div>
+        <span class="btn-action btn-action-locked">No Disponible</span>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <p>Desarrollado con  por Hector & Toby </p>
+  </footer>
+
+</body>
+</html>
