@@ -1,0 +1,53 @@
+:root {
+  /* Corporate typeface is Bogle.
+     If you have licensed webfont files, place them under /static/fonts with these names:
+       - Bogle-Regular.woff2
+       - Bogle-Bold.woff2
+       - Bogle-Black.woff2
+  */
+  --corp-font: "Bogle", "Bogle Web", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Prefer locally installed Bogle; fall back to bundled webfonts (if you add them). */
+@font-face {
+  font-family: "Bogle";
+  src:
+    local("Bogle"),
+    local("Bogle Regular"),
+    url("/static/fonts/Bogle-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bogle";
+  src:
+    local("Bogle Bold"),
+    local("Bogle-Bold"),
+    local("Bogle Bold Regular"),
+    url("/static/fonts/Bogle-Bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bogle";
+  src:
+    local("Bogle Black"),
+    local("Bogle-Black"),
+    url("/static/fonts/Bogle-Black.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}
+
+/* Force the corporate font everywhere, even if templates have inline body styles. */
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--corp-font) !important;
+}

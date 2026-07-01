@@ -1,9 +1,9 @@
 // Portal de Auditorias AP - Service Worker
-const CACHE_NAME = 'ap-portal-v4';
+const CACHE_NAME = 'ap-portal-v5';
 const STATIC_ASSETS = [
   '/',
   '/static/manifest.json',
-  '/static/walmart-font.css',
+  '/static/corporate-font.css',
 ];
 
 // Install: pre-cache static assets
